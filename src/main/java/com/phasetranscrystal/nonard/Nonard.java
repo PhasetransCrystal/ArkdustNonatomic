@@ -1,6 +1,7 @@
 package com.phasetranscrystal.nonard;
 
 import com.phasetranscrystal.nonard.opesystem.ArkOpeHandler;
+import com.phasetranscrystal.nonard.testobjs.TestObjects;
 import com.phasetranscrystal.nonatomic.GameBusConsumer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -17,6 +18,8 @@ public class Nonard {
     public Nonard(IEventBus modEventBus, ModContainer modContainer) {
         ATTACHMENT_REG.register(modEventBus);
         GameBusConsumer.registerHandlerEvents(s -> s.overworld().getData(DATA.get()));
+
+        TestObjects.bootstrap(modEventBus);
     }
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_REG = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);

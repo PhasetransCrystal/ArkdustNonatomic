@@ -151,6 +151,8 @@ dependencies {
     // Modern UI core extensions
     implementation "icyllis.modernui:ModernUI-Markdown:${modernui_version}"
 
+    implementation "io.github.tt432:eyelib:21.1.1"
+
 
 }
 
