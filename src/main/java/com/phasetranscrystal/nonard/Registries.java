@@ -1,6 +1,6 @@
 package com.phasetranscrystal.nonard;
 
-import com.phasetranscrystal.nonard.preinfo.skill.Skill;
+import com.phasetranscrystal.nonard.skill.Skill;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.bus.api.SubscribeEvent;

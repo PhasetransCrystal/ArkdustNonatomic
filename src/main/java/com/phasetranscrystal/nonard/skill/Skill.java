@@ -1,4 +1,4 @@
-package com.phasetranscrystal.nonard.preinfo.skill;
+package com.phasetranscrystal.nonard.skill;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +70,7 @@ public class Skill<T extends LivingEntity> {
         private Builder(int inactiveEnergy, int maxChargeTimes) {
             this.inactiveEnergy = inactiveEnergy;
             this.activeEnergy = inactiveEnergy;
-            this.maxCharge = Math.min(1, maxChargeTimes);
+            this.maxCharge = maxChargeTimes;
         }
 
         private Builder(int inactiveEnergy) {
