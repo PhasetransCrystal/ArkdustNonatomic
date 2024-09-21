@@ -28,6 +28,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.attachment.IAttachmentSerializer;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
@@ -43,7 +44,7 @@ public class SkillTest {
         ATTACHMENT.register(bus);
         ITEM.register(bus);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, LivingDeathEvent.class, SkillTest::onDeath);
-        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, PlayerEvent.PlayerLoggedInEvent.class, SkillTest::init);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, EntityJoinLevelEvent.class, SkillTest::init);
     }
 
     public static final DeferredRegister<Skill<?>> SKILL = DeferredRegister.create(Registries.SKILL, Nonard.MOD_ID);
@@ -114,8 +115,10 @@ public class SkillTest {
         event.getEntity().getExistingData(SKILL_ATTACHMENT).ifPresent(SkillData::requestDisable);
     }
 
-    public static void init(PlayerEvent.PlayerLoggedInEvent event) {
-        event.getEntity().getData(SKILL_ATTACHMENT).bindEntity((ServerPlayer) event.getEntity());
+    public static void init(EntityJoinLevelEvent event) {
+        if(event.getEntity() instanceof ServerPlayer serverPlayer) {
+            serverPlayer.getData(SKILL_ATTACHMENT).bindEntity(serverPlayer);
+        }
     }
 
     public static class Start extends Item {

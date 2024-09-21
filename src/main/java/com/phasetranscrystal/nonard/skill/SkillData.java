@@ -89,7 +89,7 @@ public class SkillData<T extends LivingEntity> {
     }
 
     public void bindEntity(T entity) {
-        if (this.entity != null) {
+        if (this.entity != null && !entity.getUUID().equals(this.entity.getUUID())) {
             LOGGER.warn("Entity instance (class={}) already exists. Skipped.", entity.getClass());
             return;
         }
