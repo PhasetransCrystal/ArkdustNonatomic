@@ -50,8 +50,8 @@ public class SkillTest {
 
     public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> TEST_SKILL = SKILL.register("test", () ->
             Skill.Builder.<ServerPlayer>of(30, 4)
-                    .push(data -> data.getEntity().displayClientMessage(Component.literal("TextSkillInit"), false))
-                    .flag(Skill.Flag.INSTANT_COMPLETE, true)
+                    .push(data -> data.getEntity().displayClientMessage(Component.literal("TestSkillInit"), false))
+//                    .flag(Skill.Flag.INSTANT_COMPLETE, true)
                     .onEvent(EntityTickEvent.Post.class, (event, data) -> {
                         ServerPlayer player = data.getEntity();
                         if (player.serverLevel().getGameTime() % 100 == 0 && player.getHealth() < player.getMaxHealth()) {
@@ -82,9 +82,13 @@ public class SkillTest {
                                     (ServerLevel) data.getEntity().level(), new ChunkPos(data.getEntity().blockPosition()),
                                     new SpawnParticlePacket("baozi", ParticlesTest.LARGE_SPORE_RING_SPRAY, data.getEntity().getPosition(0).toVector3f())
                             ))
-                            .onTick((event, data) -> data.getEntity().displayClientMessage(Component.literal("activeTick"), false))
+                            .onTick((event, data) -> {
+                                data.getEntity().displayClientMessage(Component.literal("activeTick"), true);
+                                data.modifyActiveEnergy(-1);
+                            })
                             .end(data -> {
-                                data.getEntity().addDeltaMovement(new Vec3(0, 100, 0));
+                                data.getEntity().jumpFromGround();
+                                data.getEntity().addDeltaMovement(new Vec3(0, 0.1, 0));
                                 data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * Integer.parseInt(data.getCacheData("charge_consume")), 2));
                             })
                     )
