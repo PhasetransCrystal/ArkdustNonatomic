@@ -32,11 +32,20 @@ public class Active<T extends LivingEntity> {
 
         protected Consumer<SkillData<T>> onStart = NO_ACTION;
         protected Consumer<SkillData<T>> onEnd = NO_ACTION;
-        protected Consumer<SkillData<T>> reachStop = NO_ACTION;
+        protected Consumer<SkillData<T>> reachStop = SkillData::nextStage;
         protected HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
 
         public static <T extends LivingEntity> Builder<T> create() {
             return new Builder<>();
+        }
+
+        public static <T extends LivingEntity> Builder<T> create(Active<T> active) {
+            Builder<T> builder = new Builder<>();
+            builder.onStart = active.onStart;
+            builder.onEnd = active.onEnd;
+            builder.reachStop = active.reachStop;
+            builder.listeners.putAll(active.listeners);
+            return builder;
         }
 
         public Builder<T> start(Consumer<SkillData<T>> consumer) {

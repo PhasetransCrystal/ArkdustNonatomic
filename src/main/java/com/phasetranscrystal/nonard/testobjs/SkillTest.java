@@ -84,12 +84,12 @@ public class SkillTest {
                             ))
                             .onTick((event, data) -> data.getEntity().displayClientMessage(Component.literal("activeTick"), false))
                             .end(data -> {
-                                data.getEntity().addDeltaMovement(new Vec3(0, 10, 0));
+                                data.getEntity().addDeltaMovement(new Vec3(0, 100, 0));
                                 data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * Integer.parseInt(data.getCacheData("charge_consume")), 2));
                             })
                     )
                     .stateChange((data, bool) -> {
-                        if (!bool && data.getActiveTimes() == 3) data.requestDisable();
+                        if (!bool && data.getActiveTimes() == 5) data.requestDisable();
                         else
                             data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + bool + " time " + data.getActiveTimes()), false);
                     })
@@ -99,7 +99,7 @@ public class SkillTest {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Nonard.MOD_ID);
 
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<SkillData<ServerPlayer>>> SKILL_ATTACHMENT =
-            ATTACHMENT.register("skill", () -> AttachmentType.builder(() -> new SkillData<>(TEST_SKILL.get())).serialize((Codec)SkillData.CODEC).copyOnDeath().build());
+            ATTACHMENT.register("skill", () -> AttachmentType.builder(() -> new SkillData<>(TEST_SKILL.get())).serialize((Codec) SkillData.CODEC).copyOnDeath().build());
 
     public static final DeferredRegister<Item> ITEM = DeferredRegister.create(net.minecraft.core.registries.Registries.ITEM, Nonard.MOD_ID);
 
@@ -122,7 +122,11 @@ public class SkillTest {
         @Override
         public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
             if (level instanceof ServerLevel server) {
-                player.getData(SKILL_ATTACHMENT).nextStage();
+                if(usedHand == InteractionHand.OFF_HAND && !player.getData(SKILL_ATTACHMENT).isEnabled()){
+                    player.getData(SKILL_ATTACHMENT).requestEnable();
+                }else {
+                    player.getData(SKILL_ATTACHMENT).nextStage();
+                }
             }
             return InteractionResultHolder.success(player.getItemInHand(usedHand));
         }

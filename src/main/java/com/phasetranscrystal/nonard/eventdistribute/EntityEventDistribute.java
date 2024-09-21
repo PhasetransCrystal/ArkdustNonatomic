@@ -8,6 +8,7 @@ import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.Event;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Consumer;
 
 
@@ -120,7 +121,7 @@ public class EntityEventDistribute {
         if (!listeners.containsKey(event.getClass()) ||
                 (eventHashCache.containsKey(event.getClass()) && eventHashCache.get(event.getClass()).equals(event.hashCode()))
         ) return;
-        listeners.get(event.getClass()).forEach(consumer -> ((Consumer<T>) consumer).accept(event));
+        List.copyOf(listeners.get(event.getClass())).forEach(consumer -> ((Consumer<T>) consumer).accept(event));
         eventHashCache.put(event.getClass(), event.hashCode());
     }
 }

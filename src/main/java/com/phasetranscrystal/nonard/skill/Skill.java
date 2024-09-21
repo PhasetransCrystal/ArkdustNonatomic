@@ -19,15 +19,14 @@ import java.util.function.Function;
 public class Skill<T extends LivingEntity> {
 
     public final int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
-    public final boolean stopAble;
 
     public final Inactive<T> inactive;
     public final Active<T> active;
 
     public final Consumer<SkillData<T>> onStart;
     public final Consumer<SkillData<T>> onEnd;
-    public final Function<SkillData<T>,Boolean> judge;
-    public final BiConsumer<SkillData<T>,Boolean> stateChange;
+    public final Function<SkillData<T>, Boolean> judge;
+    public final BiConsumer<SkillData<T>, Boolean> stateChange;
     public final ImmutableMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners;
     public final ImmutableSet<Flag> flags;
 
@@ -45,23 +44,21 @@ public class Skill<T extends LivingEntity> {
         this.stateChange = builder.stateChange;
         this.listeners = ImmutableMap.copyOf(builder.listeners);
         this.flags = ImmutableSet.copyOf(builder.flags);
-        this.stopAble = builder.stopAble;
     }
 
     public static class Builder<T extends LivingEntity> {
         public final Consumer<SkillData<T>> NO_ACTION = data -> {
         };
 
-        protected int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
-        protected boolean stopAble;
+        public int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
 
         protected Inactive.Builder<T> inactive = Inactive.Builder.create();
         protected Active.Builder<T> active = Active.Builder.create();
 
         protected Consumer<SkillData<T>> onStart = NO_ACTION;
         protected Consumer<SkillData<T>> onEnd = NO_ACTION;
-        protected Function<SkillData<T>,Boolean> judge = data -> true;
-        protected BiConsumer<SkillData<T>,Boolean> stateChange = (data, bool) -> {
+        protected Function<SkillData<T>, Boolean> judge = data -> true;
+        protected BiConsumer<SkillData<T>, Boolean> stateChange = (data, bool) -> {
         };
         protected HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
 
@@ -79,13 +76,12 @@ public class Skill<T extends LivingEntity> {
             this.maxCharge = 1;
         }
 
-        private Builder(int inactiveEnergy, int maxCharge, int initialEnergy, int initialCharge, int activeEnergy, boolean stopAble) {
+        private Builder(int inactiveEnergy, int maxCharge, int initialEnergy, int initialCharge, int activeEnergy) {
             this.inactiveEnergy = inactiveEnergy;
             this.maxCharge = maxCharge;
             this.activeEnergy = activeEnergy;
             this.initialEnergy = initialEnergy;
             this.initialCharge = initialCharge;
-            this.stopAble = stopAble;
         }
 
         public static <T extends LivingEntity> Builder<T> of(int energyCost, int maxChargeTimes) {
@@ -96,8 +92,24 @@ public class Skill<T extends LivingEntity> {
             return new Builder<>(energyCost);
         }
 
-        public static <T extends LivingEntity> Builder<T> of(int energyCost, int maxCharge, int initialEnergy, int initialCharge, int activeEnergy, boolean stopAble) {
-            return new Builder<>(energyCost, maxCharge, initialEnergy, initialCharge, activeEnergy,stopAble);
+        public static <T extends LivingEntity> Builder<T> of(Skill<T> skill) {
+            Builder<T> builder = of(skill.inactiveEnergy, skill.maxCharge, skill.initialEnergy, skill.initialCharge, skill.activeEnergy);
+            return builder.copyFrom(skill);
+        }
+
+        public static <T extends LivingEntity> Builder<T> of(int energyCost, int maxCharge, int initialEnergy, int initialCharge, int activeEnergy) {
+            return new Builder<>(energyCost, maxCharge, initialEnergy, initialCharge, activeEnergy);
+        }
+
+        public Builder<T> copyFrom(Skill<T> skill) {
+            this.inactive = Inactive.Builder.create(skill.inactive);
+            this.active = Active.Builder.create(skill.active);
+            this.onStart = skill.onStart;
+            this.onEnd = skill.onEnd;
+            this.judge = skill.judge;
+            this.stateChange = skill.stateChange;
+            this.listeners.putAll(skill.listeners);
+            return this;
         }
 
         public Builder<T> push(Consumer<SkillData<T>> consumer) {
@@ -105,20 +117,28 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
-        public Builder<T> judge(Function<SkillData<T>,Boolean> judge){
+        public Builder<T> judge(Function<SkillData<T>, Boolean> judge) {
             this.judge = judge;
             return this;
         }
 
         public Builder<T> inactive(Consumer<Inactive.Builder<T>> inactive) {
-            this.inactive = Inactive.Builder.create();
             inactive.accept(this.inactive);
             return this;
         }
 
         public Builder<T> active(Consumer<Active.Builder<T>> active) {
-            this.active = Active.Builder.create();
             active.accept(this.active);
+            return this;
+        }
+
+        public Builder<T> cleanInactive() {
+            this.inactive = Inactive.Builder.create();
+            return this;
+        }
+
+        public Builder<T> cleanActive() {
+            this.active = Active.Builder.create();
             return this;
         }
 
@@ -160,7 +180,9 @@ public class Skill<T extends LivingEntity> {
     public enum Flag implements StringRepresentable {
         AUTO_START("auto_start", builder -> builder.inactive.reachReady(SkillData::nextStage)),
         INSTANT_COMPLETE("instant_complete", builder -> builder.activeEnergy = 0),
-        PASSIVITY("passivity", builder -> builder.inactiveEnergy = 0);
+        PASSIVITY("passivity", builder -> builder.inactiveEnergy = 0),
+        TIME_CHARGE("time_charge", builder -> builder.inactive.onTick((event, data) -> data.chargeEnergy(1))),
+        ;
 
         public final String name;
         public final Consumer<Builder<? extends LivingEntity>> consumer;

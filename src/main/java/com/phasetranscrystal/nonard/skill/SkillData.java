@@ -31,10 +31,10 @@ public class SkillData<T extends LivingEntity> {
             Codec.BOOL.fieldOf("enabled").forGetter(SkillData::isEnabled),
             Registries.SKILL.byNameCodec().fieldOf("skill").forGetter(i -> i.skill),
             Codec.INT.fieldOf("activeTimes").forGetter(SkillData::getActiveTimes),
-            Codec.unboundedMap(Codec.STRING,Codec.STRING).fieldOf("cacheData").forGetter(SkillData::getCacheData),
+            Codec.unboundedMap(Codec.STRING, Codec.STRING).fieldOf("cacheData").forGetter(SkillData::getCacheData),
             Codec.STRING.listOf().fieldOf("markCleanKeys").forGetter(i -> i.markCleanKeys.stream().toList()),
             Codec.STRING.listOf().fieldOf("markCleanCacheOnce").forGetter(i -> i.markCleanCacheOnce.stream().toList())
-    ).apply(instance,SkillData::new));
+    ).apply(instance, SkillData::new));
     public static final Logger LOGGER = LogManager.getLogger("ArkdustNona:Skill/Data");
     public static final ResourceLocation SKILL_BASE_KEY = ResourceLocation.fromNamespaceAndPath(Nonard.MOD_ID, "skill_base");
     public static final ResourceLocation SKILL_INACTIVE_KEY = ResourceLocation.fromNamespaceAndPath(Nonard.MOD_ID, "skill_inactive");
@@ -48,14 +48,14 @@ public class SkillData<T extends LivingEntity> {
     private boolean enabled = true;
     public final Skill<T> skill;
     private int activeTimes = 0;
-    public final Map<String, String> cacheData;
+    public final Map<String, String> cacheData = new HashMap<>();
     private HashSet<String> markCleanKeys = new HashSet<>();
     private HashSet<String> markCleanCacheOnce = new HashSet<>();
 
     private int delay = 0;//NOSAVE
     private Runnable stageChangeSchedule = () -> {//NOSAVE
     };
-    private final Consumer<EntityTickEvent> ticker = event -> tickerHandler();//FINAL
+    private final Consumer<EntityTickEvent.Post> ticker = event -> tickerHandler();//FINAL
 
     private final Set<Pair<Holder<Attribute>, ResourceLocation>> attributeCache = new HashSet<>();//NOSAVE
 
@@ -64,10 +64,9 @@ public class SkillData<T extends LivingEntity> {
         this.skill = skill;
         this.inactiveEnergy = skill.initialEnergy;
         this.charge = skill.initialCharge;
-        this.cacheData = new HashMap<>();
     }
 
-    protected SkillData(int inactiveEnergy, int charge, int activeEnergy, boolean active, boolean enabled, Skill<?> skill , int activeTimes, Map<String,String> cacheData, List<String> markClean, List<String> markCleanCacheOnce) {
+    protected SkillData(int inactiveEnergy, int charge, int activeEnergy, boolean active, boolean enabled, Skill<?> skill, int activeTimes, Map<String, String> cacheData, List<String> markClean, List<String> markCleanCacheOnce) {
         this.inactiveEnergy = inactiveEnergy;
         this.charge = charge;
         this.activeEnergy = activeEnergy;
@@ -75,7 +74,7 @@ public class SkillData<T extends LivingEntity> {
         this.enabled = enabled;
         this.activeTimes = activeTimes;
         this.skill = (Skill<T>) skill;
-        this.cacheData = cacheData;
+        this.cacheData.putAll(cacheData);
         this.markCleanKeys.addAll(markClean);
         this.markCleanCacheOnce.addAll(markCleanCacheOnce);
     }
@@ -133,6 +132,8 @@ public class SkillData<T extends LivingEntity> {
         } else {
             distribute.removeMarked(dedicateResourceLocation(SKILL_ACTIVE_KEY));
             skill.active.onEnd.accept(this);
+            attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
+            attributeCache.clear();
             cacheDataRoll();
             activeEnergy = 0;
 
@@ -146,21 +147,22 @@ public class SkillData<T extends LivingEntity> {
         }
     }
 
-    public boolean requestEnable(){
+    public boolean requestEnable() {
         if (entity == null || entity.isRemoved() || enabled) return false;
         enable();
         return true;
     }
 
-    public boolean requestDisable(){
+    public boolean requestDisable() {
         if (!enabled) return false;
         disable();
         return true;
     }
 
     private void enable() {
+        enabled = true;
         EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
-        distribute.add(EntityTickEvent.class, ticker, dedicateResourceLocation(SKILL_BASE_KEY));
+        distribute.add(EntityTickEvent.Post.class, ticker, dedicateResourceLocation(SKILL_BASE_KEY));
         skill.onStart.accept(this);
         skill.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_BASE_KEY)));//原则上这应该得是安全的 但愿吧
         if (isPassivity()) return;
@@ -224,8 +226,8 @@ public class SkillData<T extends LivingEntity> {
         if (isActive()) return;
 
         skill.inactive.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_INACTIVE_KEY)));
-        if (inactiveEnergy > 0) skill.inactive.energyChanged.accept(this,inactiveEnergy);
-        if (charge > 0) skill.inactive.chargeChanged.accept(this,charge);
+        if (inactiveEnergy > 0) skill.inactive.energyChanged.accept(this, inactiveEnergy);
+        if (charge > 0) skill.inactive.chargeChanged.accept(this, charge);
     }
 
 
@@ -250,9 +252,13 @@ public class SkillData<T extends LivingEntity> {
     private void tickerHandler() {
         if (delay >= 1) {
             if (delay == 1) {
+                var last = stageChangeSchedule;
                 stageChangeSchedule.run();
-                stageChangeSchedule = () -> {
-                };
+                //防止在技能瞬间完成时新的计划被覆盖
+                if(stageChangeSchedule == last){
+                    stageChangeSchedule = () -> {
+                    };
+                }
             }
             delay--;
         }
@@ -338,6 +344,26 @@ public class SkillData<T extends LivingEntity> {
         return totalReleased; // 返回实际释放的能量点数
     }
 
+    public int modifyActiveEnergy(int amount) {
+        if (amount == 0 || !isActive()) return 0;
+        if (amount > 0) {
+            int allow = skill.activeEnergy - activeEnergy;
+            if (allow <= 0) return 0;
+            else {
+                allow = Math.min(allow, amount);
+                this.activeEnergy += allow;
+                return allow;
+            }
+        } else if (activeEnergy <= 0) {
+            return 0;
+        } else {
+            int allow = Math.min(activeEnergy, -amount);
+            this.activeEnergy -= allow;
+            if (this.activeEnergy <= 0) skill.active.reachStop.accept(this);
+            return -allow;
+        }
+    }
+
 
     //---[缓存数据 DataCache]---
 
@@ -363,12 +389,8 @@ public class SkillData<T extends LivingEntity> {
         AttributeInstance instance;
         if (!enabled || entity == null || (instance = entity.getAttribute(type)) == null) return false;
 
-        if (instance.hasModifier(modifier.id())) {
-            instance.addOrUpdateTransientModifier(modifier);
-            this.attributeCache.add(Pair.of(type, modifier.id()));
-        } else {
-            instance.addTransientModifier(modifier);
-        }
+        instance.addOrUpdateTransientModifier(modifier);
+        this.attributeCache.add(Pair.of(type, modifier.id()));
         return true;
     }
 
