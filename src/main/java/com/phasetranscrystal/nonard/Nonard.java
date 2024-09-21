@@ -1,10 +1,12 @@
 package com.phasetranscrystal.nonard;
 
 import com.phasetranscrystal.nonard.eventdistribute.DataAttachmentRegistry;
+import com.phasetranscrystal.nonard.eventdistribute.EventConsumer;
 import com.phasetranscrystal.nonard.opesystem.ArkOpeHandler;
 import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
 import com.phasetranscrystal.nonard.testobjs.TestObjects;
 import com.phasetranscrystal.nonatomic.GameBusConsumer;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -25,6 +27,11 @@ public class Nonard {
         DataAttachmentRegistry.REGISTER.register(modEventBus);
 
         TestObjects.bootstrap(modEventBus);
+        EventConsumer.bootstrapConsumer();
+    }
+
+    public static ResourceLocation location(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_REG = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);

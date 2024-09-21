@@ -1,6 +1,7 @@
 package com.phasetranscrystal.nonard.preinfo.skill;
 
 import com.google.common.collect.ImmutableMap;
+import com.phasetranscrystal.nonard.eventdistribute.EventConsumer;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.Event;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -50,6 +51,16 @@ public class Active<T extends LivingEntity> {
 
         public Builder<T> onHurt(BiConsumer<LivingDamageEvent.Post, SkillData<T>> consumer) {
             listeners.put(LivingDamageEvent.Post.class, consumer);
+            return this;
+        }
+
+        public Builder<T> onAttack(BiConsumer<EventConsumer.EntityAttackEvent.Post, SkillData<T>> consumer){
+            listeners.put(EventConsumer.EntityAttackEvent.Post.class, consumer);
+            return this;
+        }
+
+        public Builder<T> onKill(BiConsumer<EventConsumer.EntityKillEvent.Post, SkillData<T>> consumer){
+            listeners.put(EventConsumer.EntityKillEvent.Post.class, consumer);
             return this;
         }
 

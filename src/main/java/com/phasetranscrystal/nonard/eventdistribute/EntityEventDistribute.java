@@ -4,7 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.Event;
 
 import java.util.HashMap;
@@ -15,14 +15,14 @@ import java.util.function.Consumer;
  * 实体事件分发器，用于管理和分发事件给相应的监听器。
  */
 public class EntityEventDistribute {
-    private LivingEntity entity;
+    private Entity entity;
 
     /**
      * 初始化实体事件分发器。
      *
      * @param entity 绑定的生物实体
      */
-    public void init(LivingEntity entity) {
+    public void init(Entity entity) {
         this.entity = entity;
     }
 
@@ -31,7 +31,7 @@ public class EntityEventDistribute {
      *
      * @return 绑定的生物实体
      */
-    public LivingEntity getBinding() {
+    public Entity getBinding() {
         return entity;
     }
 
@@ -116,7 +116,7 @@ public class EntityEventDistribute {
      * @param event 要处理的事件
      * @param <T>   事件类型
      */
-    public <T extends Event> void consume(T event) {
+    public <T extends Event> void post(T event) {
         if (!listeners.containsKey(event.getClass()) ||
                 (eventHashCache.containsKey(event.getClass()) && eventHashCache.get(event.getClass()).equals(event.hashCode()))
         ) return;

@@ -1,10 +1,15 @@
 package com.phasetranscrystal.nonard.preinfo.skill;
 
+import com.mojang.datafixers.util.Pair;
 import com.phasetranscrystal.nonard.Nonard;
 import com.phasetranscrystal.nonard.eventdistribute.DataAttachmentRegistry;
 import com.phasetranscrystal.nonard.eventdistribute.EntityEventDistribute;
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +18,7 @@ import org.joml.Math;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -30,7 +36,7 @@ public class SkillData<T extends LivingEntity> {
     private boolean enabled = true;
     private int activeTimes = 0;
     public final Skill<T> skill;
-    public final HashMap<String, String> cacheData = new HashMap<>();
+    public final Map<String, String> cacheData = new HashMap<>();
     private HashSet<String> markCleanKeys = new HashSet<>();
     private HashSet<String> markCleanCacheOnce = new HashSet<>();
 
@@ -38,6 +44,9 @@ public class SkillData<T extends LivingEntity> {
     private Runnable stageChangeSchedule = () -> {
     };
     private final Consumer<EntityTickEvent> ticker = event -> tickerHandler();
+
+    private final Set<Pair<Holder<Attribute>,ResourceLocation>> attributeCache = new HashSet<>();
+
 
     public SkillData(final Skill<T> skill) {
         this.skill = skill;
@@ -63,34 +72,20 @@ public class SkillData<T extends LivingEntity> {
         this.entity = entity;
         if (!enabled) return;
 
-        EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISPATCHER);
-        distribute.add(EntityTickEvent.class, ticker);
-        skill.onStart.accept(this);
-        skill.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), SKILL_BASE_KEY));//原则上这应该得是安全的 但愿吧
-        if (isActive()) {
-            skill.active.onStart.accept(this);
-            if (isInstantComplete()) {
-                nextStage();
-            } else {
-                if (activeEnergy == 0) {
-                    skill.active.reachStop.accept(this);
-                    if (!isActive()) return;
-                }
-                skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), SKILL_ACTIVE_KEY));
-            }
-        } else if (!isPassivity()) {
-            checkInactive(distribute);
-        }
+        enable();
     }
 
     public boolean nextStage() {
-        EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISPATCHER);
+        if (!enabled) return false;
+        EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
         if (!active) {
             if (charge > 0 && skill.judge.apply(this)) {
                 charge -= 1;
 
-                distribute.removeMarked(SKILL_INACTIVE_KEY);
+                distribute.removeMarked(dedicateResourceLocation(SKILL_INACTIVE_KEY));
                 skill.inactive.onEnd.accept(this);
+                attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
+                attributeCache.clear();
                 cacheDataRoll();
 
                 active = true;
@@ -102,7 +97,7 @@ public class SkillData<T extends LivingEntity> {
                     if (isInstantComplete()) {
                         nextStage();
                     } else {
-                        skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), SKILL_ACTIVE_KEY));
+                        skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_ACTIVE_KEY)));
                     }
                 };
                 delay = 5;
@@ -110,7 +105,7 @@ public class SkillData<T extends LivingEntity> {
             }
             return false;
         } else {
-            distribute.removeMarked(SKILL_ACTIVE_KEY);
+            distribute.removeMarked(dedicateResourceLocation(SKILL_ACTIVE_KEY));
             skill.active.onEnd.accept(this);
             cacheDataRoll();
             activeEnergy = 0;
@@ -123,6 +118,55 @@ public class SkillData<T extends LivingEntity> {
             delay = 10;
             return true;
         }
+    }
+
+    public boolean enable() {
+        if (entity == null || entity.isRemoved() || enabled) return false;
+        EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
+        distribute.add(EntityTickEvent.class, ticker, dedicateResourceLocation(SKILL_BASE_KEY));
+        skill.onStart.accept(this);
+        skill.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_BASE_KEY)));//原则上这应该得是安全的 但愿吧
+        if (isPassivity()) return true;
+        if (isActive()) {
+            skill.active.onStart.accept(this);
+            if (isInstantComplete()) {
+                nextStage();
+            } else {
+                if (activeEnergy == 0) {
+                    skill.active.reachStop.accept(this);
+                    if (!isActive()) return true;
+                }
+                skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_ACTIVE_KEY)));
+            }
+        } else checkInactive(distribute);
+        return true;
+    }
+
+    public boolean disable() {
+        if (!enabled) return false;
+        EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
+        if (!isPassivity()) {
+            if (isActive()) {
+                distribute.removeMarked(dedicateResourceLocation(SKILL_ACTIVE_KEY));
+                skill.active.onEnd.accept(this);
+            } else {
+                distribute.removeMarked(dedicateResourceLocation(SKILL_INACTIVE_KEY));
+                skill.inactive.onEnd.accept(this);
+            }
+        }
+        distribute.removeMarked(dedicateResourceLocation(SKILL_BASE_KEY));
+        skill.onEnd.accept(this);
+        attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
+        attributeCache.clear();
+        enabled = false;
+        active = false;
+        this.inactiveEnergy = skill.initialEnergy;
+        this.charge = skill.initialCharge;
+        activeTimes = 0;
+        markCleanCacheOnce.clear();
+        markCleanKeys.clear();
+        cacheData.clear();
+        return true;
     }
 
     private void cacheDataRoll() {
@@ -140,7 +184,7 @@ public class SkillData<T extends LivingEntity> {
             skill.inactive.reachStop.accept(this);
         }
         if (!isActive()) {
-            skill.inactive.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), SKILL_INACTIVE_KEY));
+            skill.inactive.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_INACTIVE_KEY)));
         }
     }
 
@@ -179,6 +223,7 @@ public class SkillData<T extends LivingEntity> {
     }
 
     public int chargeEnergy(int amount) {
+        if (!enabled) return 0;
         // 如果当前的charge已经达到最大值，或者传入的amount小于等于0，或者技能开启中，则返回0
         if (charge >= skill.maxCharge || amount <= 0 || isActive()) return 0;
 
@@ -190,25 +235,38 @@ public class SkillData<T extends LivingEntity> {
 
         inactiveEnergy += consumed;
 
+        boolean reachReady = false;
+        boolean reachStop = false;
+
         // 计算可以增加的charge数量
-        boolean flag = false;
+        int flag = 0;
         int charge2 = (nowa + consumed) / skill.inactiveEnergy;
         if (charge2 > charge) {
             // 增加charge并更新inactiveEnergy
-            inactiveEnergy -= (charge2 - charge) * skill.inactiveEnergy;
+            if(charge == 0){
+                if(skill.maxCharge != 1) reachReady = true;
+                else reachStop = true;
+            }else if(charge2 == skill.maxCharge){
+                reachReady = true;
+            }
+            flag = charge2 - charge;
+            inactiveEnergy -= flag * skill.inactiveEnergy;
             charge = charge2;
-            flag = true;
         }
 
-        skill.inactive.energyChanged.accept(this);
-        if (flag) {
-            skill.inactive.chargeChanged.accept(this);
+        skill.inactive.energyChanged.accept(this,amount);
+        if (flag != 0) {
+            skill.inactive.chargeChanged.accept(this,flag);
         }
+
+        if(reachReady) skill.inactive.reachReady.accept(this);
+        if(reachStop) skill.inactive.reachStop.accept(this);
 
         return consumed; // 如果没有增加charge，仍然返回消耗的总能量点数
     }
 
     public int releaseEnergy(int amount, boolean allowBreakCharge) {
+        if (!enabled) return 0;
         // 计算可提取的最大能量
         int maxAllow = allowBreakCharge ? charge * skill.inactiveEnergy + inactiveEnergy : inactiveEnergy;
 
@@ -221,20 +279,20 @@ public class SkillData<T extends LivingEntity> {
         inactiveEnergy -= totalReleased;
 
         // 如果允许打破charge，则从charge中提取能量
-        boolean flag = false;
+        int flag = 0;
         if (allowBreakCharge) {
             int charge2 = (maxAllow - totalReleased) / skill.inactiveEnergy;
             if (charge2 < charge) {
                 // 减少charge
-                inactiveEnergy += (charge - charge2) * skill.inactiveEnergy;
+                flag = charge - charge2;
+                inactiveEnergy += flag * skill.inactiveEnergy;
                 charge = charge2;
-                flag = true;
             }
         }
 
-        skill.inactive.energyChanged.accept(this);
-        if (flag) {
-            skill.inactive.chargeChanged.accept(this);
+        skill.inactive.energyChanged.accept(this, -totalReleased);
+        if (flag != 0) {
+            skill.inactive.chargeChanged.accept(this, -flag);
         }
 
         return totalReleased; // 返回实际释放的能量点数
@@ -252,11 +310,26 @@ public class SkillData<T extends LivingEntity> {
     }
 
     public String putCacheData(String key, String value, boolean markAutoClean, boolean keepToNextStage) {
+        if(!enabled || entity == null) return null;
         if (markAutoClean) {
             if (keepToNextStage) markCleanCacheOnce.add(key);
             else markCleanKeys.add(key);
         }
         return cacheData.put(key, value);
+    }
+
+    @SuppressWarnings("null")
+    public boolean addAutoCleanAttribute(AttributeModifier modifier, Holder<Attribute> type){
+        AttributeInstance instance;
+        if(!enabled || entity == null || (instance = entity.getAttribute(type)) == null) return false;
+
+        if(instance.hasModifier(modifier.id())){
+            instance.addOrUpdateTransientModifier(modifier);
+            this.attributeCache.add(Pair.of(type,modifier.id()));
+        } else {
+            instance.addTransientModifier(modifier);
+        }
+        return true;
     }
 
 
@@ -269,7 +342,7 @@ public class SkillData<T extends LivingEntity> {
         return charge;
     }
 
-    public LivingEntity getEntity() {
+    public T getEntity() {
         return entity;
     }
 
@@ -287,6 +360,11 @@ public class SkillData<T extends LivingEntity> {
 
     public int getActiveEnergy() {
         return activeEnergy;
+    }
+
+    public ResourceLocation dedicateResourceLocation(ResourceLocation origin) {
+        ResourceLocation loc = skill.getResourceKey().location();
+        return origin.withSuffix("_" + loc.getNamespace() + "_" + loc.getPath());
     }
 
     //下面的设定不会触发能量变动事件

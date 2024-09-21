@@ -16,7 +16,6 @@ import net.minecraft.world.level.Level;
 public class ParticlesTest {
     public static final ResourceLocation LARGE_SPORE_RING_SPRAY = ResourceLocation.fromNamespaceAndPath(Nonard.MOD_ID,"large_spore_ring_spray");
 
-
     public static class Emitter extends Item{
         public Emitter() {
             super(new Properties());
@@ -25,7 +24,7 @@ public class ParticlesTest {
         @Override
         public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
             if(level.isClientSide()) {
-                new BrParticleEmitter(BrParticleLoader.getParticle(LARGE_SPORE_RING_SPRAY),null,level, player.getPosition(0).toVector3f()).emit();
+                BrParticleManager.spawnEmitter("baozi", new BrParticleEmitter(BrParticleLoader.getParticle(LARGE_SPORE_RING_SPRAY),null,level, player.getPosition(0).toVector3f()));
             }
             return super.use(level, player, usedHand);
         }

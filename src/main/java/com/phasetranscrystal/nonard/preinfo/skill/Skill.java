@@ -2,6 +2,8 @@ package com.phasetranscrystal.nonard.preinfo.skill;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.phasetranscrystal.nonard.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.Event;
@@ -177,5 +179,9 @@ public class Skill<T extends LivingEntity> {
         public @NotNull String getSerializedName() {
             return name;
         }
+    }
+
+    public ResourceKey<Skill<?>> getResourceKey() {
+        return Registries.SKILL.getResourceKey(this).get();
     }
 }
