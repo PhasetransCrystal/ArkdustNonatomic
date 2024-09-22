@@ -14,15 +14,14 @@ import net.neoforged.neoforge.event.entity.living.*;
 import net.neoforged.neoforge.event.entity.player.*;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
-import java.util.Objects;
 import java.util.function.Consumer;
 
 @EventBusSubscriber(modid = Nonard.MOD_ID)
 public class EventConsumer {
-    public static final Consumer<? extends EntityEvent> consumer = event -> event.getEntity().getData(DataAttachmentRegistry.EVENT_DISTRIBUTE).post(event);
+    public static final Consumer<EntityEvent> consumer = event -> event.getEntity().getExistingData(DataAttachmentRegistry.EVENT_DISTRIBUTE).ifPresent(d -> d.post(event));
 
     public static void bootstrapConsumer() {
-        addListener(EntityJoinLevelEvent.class);
+//        addListener(EntityJoinLevelEvent.class);
         addListener(EntityTickEvent.Post.class);
 
         addListener(LivingIncomingDamageEvent.class);
@@ -87,61 +86,75 @@ public class EventConsumer {
         NeoForge.EVENT_BUS.addListener(eventType, (Consumer<T>) consumer);
     }
 
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void init(EntityJoinLevelEvent event) {
-        event.getEntity().getData(DataAttachmentRegistry.EVENT_DISTRIBUTE).init(event.getEntity());
+        NeoForge.EVENT_BUS.post(new GatherEntityDistributeEvent(event.getEntity()));
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void postAttackIncome(LivingIncomingDamageEvent event) {
-        Entity entity = event.getSource().getEntity();
-        if (entity != null && NeoForge.EVENT_BUS.post(new EntityAttackEvent.Income(entity, event)).isCanceled()) {
-            event.setCanceled(true);
-        }
+        boolean cancelFlag = false;
+        if (event.getSource().getEntity() != null)
+            cancelFlag = NeoForge.EVENT_BUS.post(new EntityAttackEvent.Income(event.getSource().getEntity(), event, false)).isCanceled();
+        if (!event.getSource().isDirect() && event.getSource().getDirectEntity() != null)
+            cancelFlag = NeoForge.EVENT_BUS.post(new EntityAttackEvent.Income(event.getSource().getDirectEntity(), event, true)).isCanceled() || cancelFlag;
+
+        event.setCanceled(cancelFlag);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void postAttackPre(LivingDamageEvent.Pre event) {
-        Entity entity = event.getSource().getEntity();
-        if (entity != null) {
-            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Pre(entity, event));
+        if (event.getSource().getEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Pre(event.getSource().getEntity(), event, false));
+        }
+        if(!event.getSource().isDirect() && event.getSource().getDirectEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Pre(event.getSource().getDirectEntity(), event, true));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void postAttackPost(LivingDamageEvent.Post event) {
-        Entity entity = event.getSource().getEntity();
-        if (entity != null) {
-            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Post(entity, event));
+        if (event.getSource().getEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Post(event.getSource().getEntity(), event, false));
+        }
+        if(!event.getSource().isDirect() && event.getSource().getDirectEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityAttackEvent.Post(event.getSource().getDirectEntity(), event, true));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void preKill(LivingDeathEvent event) {
-        Entity entity = event.getSource().getEntity();
-        if (entity != null && NeoForge.EVENT_BUS.post(new EntityKillEvent.Pre(entity, event)).isCanceled()) {
-            event.setCanceled(true);
+        if (event.getSource().getEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityKillEvent.Pre(event.getSource().getEntity(), event, false));
+        }
+        if(!event.getSource().isDirect() && event.getSource().getDirectEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityKillEvent.Pre(event.getSource().getDirectEntity(), event, true));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void postKill(LivingDeathEvent event) {
-        Entity entity = event.getSource().getEntity();
-        if (entity != null) {
-            NeoForge.EVENT_BUS.post(new EntityKillEvent.Post(entity, event));
+        if (event.getSource().getEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityKillEvent.Post(event.getSource().getEntity(), event, false));
+        }
+        if(!event.getSource().isDirect() && event.getSource().getDirectEntity() != null) {
+            NeoForge.EVENT_BUS.post(new EntityKillEvent.Post(event.getSource().getDirectEntity(), event, true));
         }
     }
 
     public abstract static class EntityAttackEvent extends EntityEvent {
-        public EntityAttackEvent(Entity entity) {
+        public final boolean isInBetweenEntity;
+
+        public EntityAttackEvent(Entity entity, boolean isInBetweenEntity) {
             super(entity);
+            this.isInBetweenEntity = isInBetweenEntity;
         }
 
         public static class Income extends EntityAttackEvent implements ICancellableEvent {
             public final LivingIncomingDamageEvent origin;
 
-            public Income(Entity entity, LivingIncomingDamageEvent event) {
-                super(entity);
+            public Income(Entity entity, LivingIncomingDamageEvent event, boolean isInBetweenEntity) {
+                super(entity, isInBetweenEntity);
                 this.origin = event;
             }
         }
@@ -149,8 +162,8 @@ public class EventConsumer {
         public static class Pre extends EntityAttackEvent {
             public final LivingDamageEvent.Pre origin;
 
-            public Pre(Entity entity, LivingDamageEvent.Pre event) {
-                super(entity);
+            public Pre(Entity entity, LivingDamageEvent.Pre event, boolean isInBetweenEntity) {
+                super(entity, isInBetweenEntity);
                 this.origin = event;
             }
         }
@@ -158,8 +171,8 @@ public class EventConsumer {
         public static class Post extends EntityAttackEvent {
             public final LivingDamageEvent.Post origin;
 
-            public Post(Entity entity, LivingDamageEvent.Post event) {
-                super(entity);
+            public Post(Entity entity, LivingDamageEvent.Post event, boolean isInBetweenEntity) {
+                super(entity, isInBetweenEntity);
                 this.origin = event;
             }
         }
@@ -167,22 +180,30 @@ public class EventConsumer {
 
     public abstract static class EntityKillEvent extends EntityEvent {
         public final LivingDeathEvent origin;
+        public final boolean isInBetweenEntity;
 
-        public EntityKillEvent(Entity entity, LivingDeathEvent origin) {
+        public EntityKillEvent(Entity entity, LivingDeathEvent origin, boolean isInBetweenEntity) {
             super(entity);
             this.origin = origin;
+            this.isInBetweenEntity = isInBetweenEntity;
         }
 
         public static class Pre extends EntityKillEvent implements ICancellableEvent {
-            public Pre(Entity entity, LivingDeathEvent origin) {
-                super(entity, origin);
+            public Pre(Entity entity, LivingDeathEvent origin, boolean isInBetweenEntity) {
+                super(entity, origin, isInBetweenEntity);
             }
         }
 
         public static class Post extends EntityKillEvent {
-            public Post(Entity entity, LivingDeathEvent origin) {
-                super(entity, origin);
+            public Post(Entity entity, LivingDeathEvent origin, boolean isInBetweenEntity) {
+                super(entity, origin, isInBetweenEntity);
             }
+        }
+    }
+
+    public static class GatherEntityDistributeEvent extends EntityEvent {
+        public GatherEntityDistributeEvent(Entity entity) {
+            super(entity);
         }
     }
 }

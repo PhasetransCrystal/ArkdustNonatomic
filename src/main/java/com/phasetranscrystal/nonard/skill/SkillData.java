@@ -4,7 +4,6 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.phasetranscrystal.nonard.Nonard;
-import com.phasetranscrystal.nonard.Registries;
 import com.phasetranscrystal.nonard.eventdistribute.DataAttachmentRegistry;
 import com.phasetranscrystal.nonard.eventdistribute.EntityEventDistribute;
 import net.minecraft.core.Holder;
@@ -47,6 +46,7 @@ public class SkillData<T extends LivingEntity> {
     private boolean active = false;
     private boolean enabled = true;
     public final Skill<T> skill;
+    public final ResourceLocation skillName;
     private int activeTimes = 0;
     public final Map<String, String> cacheData = new HashMap<>();
     private HashSet<String> markCleanKeys = new HashSet<>();
@@ -62,6 +62,7 @@ public class SkillData<T extends LivingEntity> {
 
     public SkillData(final Skill<T> skill) {
         this.skill = skill;
+        this.skillName = skill.getResourceKey().location();
         this.inactiveEnergy = skill.initialEnergy;
         this.charge = skill.initialCharge;
     }
@@ -74,6 +75,7 @@ public class SkillData<T extends LivingEntity> {
         this.enabled = enabled;
         this.activeTimes = activeTimes;
         this.skill = (Skill<T>) skill;
+        this.skillName = skill.getResourceKey().location();
         this.cacheData.putAll(cacheData);
         this.markCleanKeys.addAll(markClean);
         this.markCleanCacheOnce.addAll(markCleanCacheOnce);
@@ -107,7 +109,7 @@ public class SkillData<T extends LivingEntity> {
             if (charge > 0 && skill.judge.apply(this)) {
                 charge -= 1;
 
-                distribute.removeMarked(dedicateResourceLocation(SKILL_INACTIVE_KEY));
+                distribute.removeMarked(Skill.NAME, skillName, SKILL_INACTIVE_KEY);
                 skill.inactive.onEnd.accept(this);
                 attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
                 attributeCache.clear();
@@ -122,7 +124,7 @@ public class SkillData<T extends LivingEntity> {
                     if (isInstantComplete()) {
                         nextStage();
                     } else {
-                        skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_ACTIVE_KEY)));
+                        skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), Skill.NAME, skillName, SKILL_ACTIVE_KEY));
                     }
                 };
                 delay = 5;
@@ -130,7 +132,7 @@ public class SkillData<T extends LivingEntity> {
             }
             return false;
         } else {
-            distribute.removeMarked(dedicateResourceLocation(SKILL_ACTIVE_KEY));
+            distribute.removeMarked(Skill.NAME, skillName, SKILL_ACTIVE_KEY);
             skill.active.onEnd.accept(this);
             attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
             attributeCache.clear();
@@ -162,9 +164,9 @@ public class SkillData<T extends LivingEntity> {
     private void enable() {
         enabled = true;
         EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
-        distribute.add(EntityTickEvent.Post.class, ticker, dedicateResourceLocation(SKILL_BASE_KEY));
+        distribute.add(EntityTickEvent.Post.class, ticker, Skill.NAME, skillName, SKILL_BASE_KEY);
         skill.onStart.accept(this);
-        skill.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_BASE_KEY)));//原则上这应该得是安全的 但愿吧
+        skill.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), Skill.NAME, skillName, SKILL_BASE_KEY));//原则上这应该得是安全的 但愿吧
         if (isPassivity()) return;
         if (isActive()) {
             skill.active.onStart.accept(this);
@@ -175,23 +177,14 @@ public class SkillData<T extends LivingEntity> {
                     skill.active.reachStop.accept(this);
                     if (!isActive()) return;
                 }
-                skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_ACTIVE_KEY)));
+                skill.active.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), Skill.NAME, skillName, SKILL_ACTIVE_KEY));
             }
         } else checkInactive(distribute);
     }
 
     private boolean disable() {
         EntityEventDistribute distribute = entity.getData(DataAttachmentRegistry.EVENT_DISTRIBUTE);
-        if (!isPassivity()) {
-            if (isActive()) {
-                distribute.removeMarked(dedicateResourceLocation(SKILL_ACTIVE_KEY));
-                skill.active.onEnd.accept(this);
-            } else {
-                distribute.removeMarked(dedicateResourceLocation(SKILL_INACTIVE_KEY));
-                skill.inactive.onEnd.accept(this);
-            }
-        }
-        distribute.removeMarked(dedicateResourceLocation(SKILL_BASE_KEY));
+        distribute.removeMarked(Skill.NAME, skillName);
         skill.onEnd.accept(this);
         attributeCache.forEach(pair -> entity.getAttribute(pair.getFirst()).removeModifier(pair.getSecond()));
         attributeCache.clear();
@@ -225,7 +218,7 @@ public class SkillData<T extends LivingEntity> {
         }
         if (isActive()) return;
 
-        skill.inactive.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), dedicateResourceLocation(SKILL_INACTIVE_KEY)));
+        skill.inactive.listeners.forEach((clazz, consumer) -> distribute.add(clazz, event -> ((BiConsumer) consumer).accept(event, this), Skill.NAME, skillName, SKILL_INACTIVE_KEY));
         if (inactiveEnergy > 0) skill.inactive.energyChanged.accept(this, inactiveEnergy);
         if (charge > 0) skill.inactive.chargeChanged.accept(this, charge);
     }
@@ -255,7 +248,7 @@ public class SkillData<T extends LivingEntity> {
                 var last = stageChangeSchedule;
                 stageChangeSchedule.run();
                 //防止在技能瞬间完成时新的计划被覆盖
-                if(stageChangeSchedule == last){
+                if (stageChangeSchedule == last) {
                     stageChangeSchedule = () -> {
                     };
                 }
@@ -422,11 +415,6 @@ public class SkillData<T extends LivingEntity> {
 
     public int getActiveEnergy() {
         return activeEnergy;
-    }
-
-    public ResourceLocation dedicateResourceLocation(ResourceLocation origin) {
-        ResourceLocation loc = skill.getResourceKey().location();
-        return origin.withSuffix("_" + loc.getNamespace() + "_" + loc.getPath());
     }
 
     //下面的设定不会触发能量变动事件

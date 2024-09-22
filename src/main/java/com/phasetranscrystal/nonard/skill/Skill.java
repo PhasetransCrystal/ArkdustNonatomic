@@ -2,8 +2,9 @@ package com.phasetranscrystal.nonard.skill;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.phasetranscrystal.nonard.Registries;
+import com.phasetranscrystal.nonard.Nonard;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.Event;
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Skill<T extends LivingEntity> {
+    public static final ResourceLocation NAME = Nonard.location("skill");
 
     public final int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
 
