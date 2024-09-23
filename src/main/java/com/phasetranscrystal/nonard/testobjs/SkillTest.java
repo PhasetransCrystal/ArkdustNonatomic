@@ -48,7 +48,7 @@ public class SkillTest {
 
     public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> TEST_SKILL = SKILL.register("test",
             () -> Skill.Builder.<ServerPlayer>of(30, 4)
-                    .push(data -> data.getEntity().displayClientMessage(Component.literal("TestSkillInit"), false))
+                    .start(data -> data.getEntity().displayClientMessage(Component.literal("TestSkillInit"), false))
 //                    .flag(Skill.Flag.INSTANT_COMPLETE, true)
                     .onEvent(EntityTickEvent.Post.class, (event, data) -> {
                         ServerPlayer player = data.getEntity();
@@ -95,7 +95,7 @@ public class SkillTest {
                         else
                             data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + behavior + " time " + data.getActiveTimes()), false);
                     })
-                    .pop(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
+                    .end(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
     );
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Nonard.MOD_ID);

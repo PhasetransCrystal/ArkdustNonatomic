@@ -16,9 +16,7 @@ import java.rmi.UnexpectedException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Skill<T extends LivingEntity> {
     public static final ResourceLocation NAME = Nonard.location("skill");
@@ -148,7 +146,7 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
-        public Builder<T> push(Consumer<SkillData<T>> consumer) {
+        public Builder<T> start(Consumer<SkillData<T>> consumer) {
             onStart = consumer;
             return this;
         }
@@ -229,7 +227,7 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
-        public Skill<T> pop() {
+        public Skill<T> end() {
             try {
                 return new Skill<>(this);
             } catch (UnexpectedException e) {
@@ -237,9 +235,9 @@ public class Skill<T extends LivingEntity> {
             }
         }
 
-        public Skill<T> pop(Consumer<SkillData<T>> consumer) {
+        public Skill<T> end(Consumer<SkillData<T>> consumer) {
             onEnd = consumer;
-            return pop();
+            return end();
         }
     }
 
