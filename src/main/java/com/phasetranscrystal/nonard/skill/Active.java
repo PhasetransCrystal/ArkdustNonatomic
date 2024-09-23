@@ -14,12 +14,14 @@ import java.util.function.Consumer;
 public class Active<T extends LivingEntity> {
     public static final Active<?> EMPTY = Builder.create().build();
 
+    public final int delay;
     public final Consumer<SkillData<T>> onStart;
     public final Consumer<SkillData<T>> onEnd;
     public final Consumer<SkillData<T>> reachStop;
     public final ImmutableMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners;
 
     public Active(Builder<T> builder) {
+        this.delay = Math.max(builder.delay, 0);
         this.onStart = builder.onStart;
         this.onEnd = builder.onEnd;
         this.reachStop = builder.reachStop;
@@ -30,10 +32,11 @@ public class Active<T extends LivingEntity> {
         public final Consumer<SkillData<T>> NO_ACTION = data -> {
         };
 
-        protected Consumer<SkillData<T>> onStart = NO_ACTION;
-        protected Consumer<SkillData<T>> onEnd = NO_ACTION;
-        protected Consumer<SkillData<T>> reachStop = SkillData::nextStage;
-        protected HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
+        public int delay = 0;
+        public Consumer<SkillData<T>> onStart = NO_ACTION;
+        public Consumer<SkillData<T>> onEnd = NO_ACTION;
+        public Consumer<SkillData<T>> reachStop = data -> data.switchTo(false, "default");
+        public HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
 
         public static <T extends LivingEntity> Builder<T> create() {
             return new Builder<>();
@@ -53,6 +56,11 @@ public class Active<T extends LivingEntity> {
             return this;
         }
 
+        public Builder<T> setDelay(int delay) {
+            this.delay = delay;
+            return this;
+        }
+
         public Builder<T> onTick(BiConsumer<EntityTickEvent.Post, SkillData<T>> consumer) {
             listeners.put(EntityTickEvent.Post.class, consumer);
             return this;
@@ -63,12 +71,12 @@ public class Active<T extends LivingEntity> {
             return this;
         }
 
-        public Builder<T> onAttack(BiConsumer<EventConsumer.EntityAttackEvent.Post, SkillData<T>> consumer){
+        public Builder<T> onAttack(BiConsumer<EventConsumer.EntityAttackEvent.Post, SkillData<T>> consumer) {
             listeners.put(EventConsumer.EntityAttackEvent.Post.class, consumer);
             return this;
         }
 
-        public Builder<T> onKill(BiConsumer<EventConsumer.EntityKillEvent.Post, SkillData<T>> consumer){
+        public Builder<T> onKill(BiConsumer<EventConsumer.EntityKillEvent.Post, SkillData<T>> consumer) {
             listeners.put(EventConsumer.EntityKillEvent.Post.class, consumer);
             return this;
         }

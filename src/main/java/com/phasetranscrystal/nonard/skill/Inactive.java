@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 public class Inactive<T extends LivingEntity> {
     public static final Inactive<?> EMPTY = Builder.create().build();
 
+    public final int delay;
     public final BiConsumer<SkillData<T>, Integer> chargeChanged;
     public final BiConsumer<SkillData<T>, Integer> energyChanged;
     public final Consumer<SkillData<T>> onStart;
@@ -23,6 +24,7 @@ public class Inactive<T extends LivingEntity> {
     public final ImmutableMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners;
 
     public Inactive(Builder<T> builder) {
+        this.delay = Math.max(builder.delay, 0);
         this.chargeChanged = builder.chargeChanged;
         this.energyChanged = builder.energyChanged;
         this.onStart = builder.onStart;
@@ -33,18 +35,19 @@ public class Inactive<T extends LivingEntity> {
     }
 
     public static class Builder<T extends LivingEntity> {
+        public int delay = 0;
         public final Consumer<SkillData<T>> NO_ACTION = data -> {
         };
 
-        protected BiConsumer<SkillData<T>, Integer> chargeChanged = (data, integer) -> {
+        public BiConsumer<SkillData<T>, Integer> chargeChanged = (data, integer) -> {
         };
-        protected BiConsumer<SkillData<T>, Integer> energyChanged = (data, integer) -> {
+        public BiConsumer<SkillData<T>, Integer> energyChanged = (data, integer) -> {
         };
-        protected Consumer<SkillData<T>> onStart = NO_ACTION;
-        protected Consumer<SkillData<T>> onEnd = NO_ACTION;
-        protected Consumer<SkillData<T>> reachReady = NO_ACTION;
-        protected Consumer<SkillData<T>> reachStop = NO_ACTION;
-        protected HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
+        public Consumer<SkillData<T>> onStart = NO_ACTION;
+        public Consumer<SkillData<T>> onEnd = NO_ACTION;
+        public Consumer<SkillData<T>> reachReady = NO_ACTION;
+        public Consumer<SkillData<T>> reachStop = NO_ACTION;
+        public HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
 
         public static <T extends LivingEntity> Builder<T> create() {
             return new Builder<>();
@@ -64,6 +67,11 @@ public class Inactive<T extends LivingEntity> {
 
         public Builder<T> start(Consumer<SkillData<T>> consumer) {
             onStart = consumer;
+            return this;
+        }
+
+        public Builder<T> setDelay(int delay) {
+            this.delay = delay;
             return this;
         }
 

@@ -46,8 +46,8 @@ public class SkillTest {
 
     public static final DeferredRegister<Skill<?>> SKILL = DeferredRegister.create(Registries.SKILL, Nonard.MOD_ID);
 
-    public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> TEST_SKILL = SKILL.register("test", () ->
-            Skill.Builder.<ServerPlayer>of(30, 4)
+    public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> TEST_SKILL = SKILL.register("test",
+            () -> Skill.Builder.<ServerPlayer>of(30, 4)
                     .push(data -> data.getEntity().displayClientMessage(Component.literal("TestSkillInit"), false))
 //                    .flag(Skill.Flag.INSTANT_COMPLETE, true)
                     .onEvent(EntityTickEvent.Post.class, (event, data) -> {
@@ -74,7 +74,7 @@ public class SkillTest {
                                 data.setCharge(0);
                             })
                     )
-                    .judge(data -> data.getEntity().level().isNight())
+                    .judge((data, name) -> data.getEntity().level().isNight())
                     .active(builder -> builder
                             .start(data -> PacketDistributor.sendToPlayersTrackingChunk(
                                     (ServerLevel) data.getEntity().level(), new ChunkPos(data.getEntity().blockPosition()),
@@ -87,13 +87,13 @@ public class SkillTest {
                             .end(data -> {
                                 data.getEntity().jumpFromGround();
                                 data.getEntity().addDeltaMovement(new Vec3(0, 0.1, 0));
-                                data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * Integer.parseInt(data.getCacheData("charge_consume")), 2));
+                                data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * data.getCacheDataAsInt("charge_consume", 0, true), 2));
                             })
                     )
-                    .stateChange((data, bool) -> {
-                        if (!bool && data.getActiveTimes() == 5) data.requestDisable();
+                    .stateChange((data, behavior) -> {
+                        if (!behavior.isActive() && data.getActiveTimes() == 5) data.requestDisable();
                         else
-                            data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + bool + " time " + data.getActiveTimes()), false);
+                            data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + behavior + " time " + data.getActiveTimes()), false);
                     })
                     .pop(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
     );
@@ -113,7 +113,7 @@ public class SkillTest {
     }
 
     public static void init(EntityJoinLevelEvent event) {
-        if(event.getEntity() instanceof ServerPlayer serverPlayer) {
+        if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             serverPlayer.getData(SKILL_ATTACHMENT).bindEntity(serverPlayer);
         }
     }
@@ -126,10 +126,10 @@ public class SkillTest {
         @Override
         public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
             if (level instanceof ServerLevel server) {
-                if(usedHand == InteractionHand.OFF_HAND && !player.getData(SKILL_ATTACHMENT).isEnabled()){
+                if (usedHand == InteractionHand.OFF_HAND && !player.getData(SKILL_ATTACHMENT).isEnabled()) {
                     player.getData(SKILL_ATTACHMENT).requestEnable();
-                }else {
-                    player.getData(SKILL_ATTACHMENT).nextStage();
+                } else {
+                    player.getData(SKILL_ATTACHMENT).switchToIfNot(true, "default");
                 }
             }
             return InteractionResultHolder.success(player.getItemInHand(usedHand));
