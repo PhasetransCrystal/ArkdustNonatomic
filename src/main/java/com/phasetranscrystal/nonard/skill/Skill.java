@@ -9,63 +9,57 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.Event;
 import org.apache.commons.lang3.function.ToBooleanBiFunction;
+import org.apache.commons.lang3.function.TriConsumer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 
-import java.rmi.UnexpectedException;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class Skill<T extends LivingEntity> {
+    public static final Logger LOGGER = LogManager.getLogger("BreaBlast:Skill");
     public static final ResourceLocation NAME = Nonard.location("skill");
 
     public final int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
 
-    public final String initBehavior;
-    public final boolean initWithActive;
+    public final Optional<String> initBehavior;
 
-    public final ImmutableMap<String, Inactive<T>> inactives;
-    public final ImmutableMap<String, Active<T>> actives;
+    public final ImmutableMap<String, Behavior<T>> behaviors;
 
     public final Consumer<SkillData<T>> onStart;
     public final Consumer<SkillData<T>> onEnd;
-    public final ToBooleanBiFunction<SkillData<T>, String> judge;
-    public final BiConsumer<SkillData<T>, SkillData.BehaviorRecord> stateChange;
+    public final ToBooleanBiFunction<SkillData<T>, Optional<String>> judge;
+    public final BiConsumer<SkillData<T>, Optional<String>> stateChange;
     public final ImmutableMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners;
     public final ImmutableSet<Flag> flags;
 
-    private Skill(Builder<T> builder) throws UnexpectedException {
+    private Skill(Builder<T> builder) {
         this.inactiveEnergy = Math.max(builder.inactiveEnergy, 0);
         this.maxCharge = Math.max(builder.maxCharge, 1);
         this.initialEnergy = Math.clamp(0, inactiveEnergy, builder.initialEnergy);
         this.initialCharge = Math.clamp(0, maxCharge, builder.initialCharge);
         this.activeEnergy = Math.max(builder.activeEnergy, 0);
 
-        this.initBehavior = builder.initBehavior;
-        this.initWithActive = builder.initWithActive;
+        this.initBehavior = Optional.ofNullable(builder.initBehavior);
 
-        if (initWithActive) {
-            if (!builder.actives.containsKey(initBehavior))
-                throw new UnexpectedException("Can't build skill: behavior(name=\"" + initBehavior + "\", active) is required but not found.");
-        } else {
-            if (!builder.inactives.containsKey(initBehavior))
-                throw new UnexpectedException("Can't build skill: behavior(name=\"" + initBehavior + "\", inactive) is required but not found.");
+        if (builder.initBehavior != null && !builder.behaviors.containsKey(builder.initBehavior)) {
+            LOGGER.error("Init behavior(name={}) not exist in behaviors({}). Changed to null.", builder.initBehavior, Arrays.toString(builder.behaviors.keySet().toArray()));
+            builder.initBehavior = null;
         }
 
-        ImmutableMap.Builder<String, Inactive<T>> inacBuilder = ImmutableMap.builder();
-        builder.inactives.forEach((name, b) -> inacBuilder.put(name, b.build()));
-        this.inactives = inacBuilder.build();
+        ImmutableMap.Builder<String, Behavior<T>> behavBuilder = ImmutableMap.builder();
+        builder.behaviors.forEach((name, b) -> behavBuilder.put(name, b.build()));
+        this.behaviors = behavBuilder.build();
 
-        ImmutableMap.Builder<String, Active<T>> acBuilder = ImmutableMap.builder();
-        builder.actives.forEach((name, b) -> acBuilder.put(name, b.build()));
-        this.actives = acBuilder.build();
 
         this.onStart = builder.onStart;
         this.onEnd = builder.onEnd;
         this.judge = builder.judge;
-        this.stateChange = builder.stateChange;
+        this.stateChange = builder.behaviorChange;
         this.listeners = ImmutableMap.copyOf(builder.listeners);
         this.flags = ImmutableSet.copyOf(builder.flags);
     }
@@ -76,21 +70,15 @@ public class Skill<T extends LivingEntity> {
 
         public int inactiveEnergy, maxCharge, initialEnergy, initialCharge, activeEnergy;
 
-        public String initBehavior = "default";
-        public boolean initWithActive = false;
+        @Nullable
+        public String initBehavior = "inactive";
 
-        public HashMap<String, Inactive.Builder<T>> inactives = new HashMap<>();
-        public HashMap<String, Active.Builder<T>> actives = new HashMap<>();
-
-        {
-            inactives.put("default", Inactive.Builder.create());
-            actives.put("default", Active.Builder.create());
-        }
+        public HashMap<String, Behavior.Builder<T>> behaviors = new HashMap<>();
 
         public Consumer<SkillData<T>> onStart = NO_ACTION;
         public Consumer<SkillData<T>> onEnd = NO_ACTION;
-        public ToBooleanBiFunction<SkillData<T>, String> judge = (data,behavior) -> true;
-        public BiConsumer<SkillData<T>, SkillData.BehaviorRecord> stateChange = (data, behaviorRecord) -> {
+        public ToBooleanBiFunction<SkillData<T>, Optional<String>> judge = (data, behavior) -> true;
+        public BiConsumer<SkillData<T>, Optional<String>> behaviorChange = (data, behaviorRecord) -> {
         };
         public HashMap<Class<? extends Event>, BiConsumer<? extends Event, SkillData<T>>> listeners = new HashMap<>();
 
@@ -135,13 +123,12 @@ public class Skill<T extends LivingEntity> {
 
         public Builder<T> copyFrom(Skill<T> skill) {
 
-            skill.inactives.forEach((name, builder) -> this.inactives.put(name, Inactive.Builder.create(builder)));
-            skill.actives.forEach((name, builder) -> this.actives.put(name, Active.Builder.create(builder)));
+            skill.behaviors.forEach((name, builder) -> this.behaviors.put(name, Behavior.Builder.create(builder)));
 
             this.onStart = skill.onStart;
             this.onEnd = skill.onEnd;
             this.judge = skill.judge;
-            this.stateChange = skill.stateChange;
+            this.behaviorChange = skill.stateChange;
             this.listeners.putAll(skill.listeners);
             return this;
         }
@@ -151,54 +138,30 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
-        public Builder<T> judge(ToBooleanBiFunction<SkillData<T>, String> judge) {
-            this.judge = judge;
+        public Builder<T> inactive(Consumer<Behavior.Builder<T>> inactive) {
+            inactive.accept(this.behaviors.computeIfAbsent("inactive", key -> Behavior.Builder.create()));
             return this;
         }
 
-        public Builder<T> inactive(Consumer<Inactive.Builder<T>> inactive) {
-            inactive.accept(this.inactives.computeIfAbsent("default", key -> Inactive.Builder.create()));
+        public Builder<T> active(Consumer<Behavior.Builder<T>> active) {
+            active.accept(this.behaviors.computeIfAbsent("active", key -> Behavior.Builder.<T>create().onActiveEnergyEmpty(data -> data.switchTo("inactive"))));
             return this;
         }
 
-        public Builder<T> active(Consumer<Active.Builder<T>> active) {
-            active.accept(this.actives.computeIfAbsent("default", key -> Active.Builder.create()));
-            return this;
-        }
-
-        public Builder<T> inactive(Consumer<Inactive.Builder<T>> inactive, String name) {
-            Inactive.Builder<T> builder = Inactive.Builder.create();
+        public Builder<T> addBehavior(Consumer<Behavior.Builder<T>> inactive, String name) {
+            Behavior.Builder<T> builder = Behavior.Builder.create();
             inactive.accept(builder);
-            inactives.put(name, builder);
+            behaviors.put(name, builder);
             return this;
         }
 
-        public Builder<T> active(Consumer<Active.Builder<T>> active, String name) {
-            Active.Builder<T> builder = Active.Builder.create();
-            active.accept(builder);
-            actives.put(name, builder);
+        public Builder<T> removeBehavior(String name) {
+            behaviors.remove(name);
             return this;
         }
 
-        public Builder<T> cleanInactive() {
-            this.inactives = new HashMap<>();
-            this.inactives.put("default", Inactive.Builder.create());
-            return this;
-        }
-
-        public Builder<T> cleanActive() {
-            this.actives = new HashMap<>();
-            this.actives.put("default", Active.Builder.create());
-            return this;
-        }
-
-        public Builder<T> cleanInactive(String name) {
-            this.inactives.remove(name);
-            return this;
-        }
-
-        public Builder<T> cleanActive(String name) {
-            this.actives.remove(name);
+        public Builder<T> removeBehavior() {
+            behaviors.clear();
             return this;
         }
 
@@ -207,8 +170,14 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
-        public Builder<T> stateChange(BiConsumer<SkillData<T>, SkillData.BehaviorRecord> consumer) {
-            this.stateChange = consumer;
+
+        public Builder<T> judge(ToBooleanBiFunction<SkillData<T>, Optional<String>> judge) {
+            this.judge = judge;
+            return this;
+        }
+
+        public Builder<T> onBehaviorChange(BiConsumer<SkillData<T>, Optional<String>> consumer) {
+            this.behaviorChange = consumer;
             return this;
         }
 
@@ -218,21 +187,19 @@ public class Skill<T extends LivingEntity> {
         }
 
         public Builder<T> flag(Flag flag, boolean execute) {
-            if (!flags.contains(flag)) {
-                flags.add(flag);
-                if (execute) {
-                    flag.consumer.accept(this);
-                }
+            return flag(flag, execute, null, null);
+        }
+
+        public Builder<T> flag(Flag flag, boolean execute, String nameRedirect1, String nameRedirect2) {
+            flags.add(flag);
+            if (execute) {
+                flag.consumer.accept(this, nameRedirect1, nameRedirect2);
             }
             return this;
         }
 
         public Skill<T> end() {
-            try {
-                return new Skill<>(this);
-            } catch (UnexpectedException e) {
-                throw new RuntimeException(e);
-            }
+            return new Skill<>(this);
         }
 
         public Skill<T> end(Consumer<SkillData<T>> consumer) {
@@ -242,22 +209,30 @@ public class Skill<T extends LivingEntity> {
     }
 
     public enum Flag implements StringRepresentable {
-        AUTO_START("auto_start", builder -> builder.inactives.get("default").reachReady(data -> data.switchTo(true,"default"))),
-        INSTANT_COMPLETE("instant_complete", builder -> builder.activeEnergy = 0),
-        PASSIVITY("passivity", builder -> builder.inactiveEnergy = 0),
-        TIME_CHARGE("time_charge", builder -> builder.inactives.get("default").onTick((event, data) -> data.chargeEnergy(1))),
-        ;
+        AUTO_START("auto_start", (builder, redirectName1, redirectName2) -> builder.behaviors.get(redirectName1 == null ? "inactive" : redirectName1).onChargeReady(data -> data.switchTo(redirectName2 == null ? "active" : redirectName2))),
+        AUTO_FINISH("auto_finish", (builder, redirectName1, redirectName2) -> builder.behaviors.get(Objects.requireNonNullElse(redirectName1, "active")).onActiveEnergyEmpty(data -> data.switchTo(Objects.requireNonNullElse(redirectName2, "inactive")))),
+
+        INSTANT_COMPLETE("instant_complete", (builder, redirectName1, redirectName2) -> builder.activeEnergy = 0),
+        PASSIVITY("passivity", (builder, redirectName1, redirectName2) -> builder.inactiveEnergy = 0),
+
+        INTERRUPTIBLE("interruptible"),
+
+        TIME_ADD_INACTIVE_ENERGY("time_add_inactive_energy", (builder, redirectName1, redirectName2) -> builder.behaviors.get(redirectName1 == null ? "inactive" : redirectName1).onTick((event, data) -> data.addEnergy(1))),
+        CLEAN_ACTIVE_ENERGY("clean_active_energy", (builder, redirectName1, redirectName2) -> builder.behaviors.get(Objects.requireNonNullElse(redirectName1, "active")).endWith(data -> data.setActiveEnergy(0))),
+        MARK_SKILL_TIME("mark_skill_time", (builder, redirectName1, redirectName2) -> builder.onBehaviorChange((data, toName) -> {
+            if (toName.equals(Objects.requireNonNullElse(redirectName1, "active"))) data.consumerActiveStart();
+        }));
 
         public final String name;
-        public final Consumer<Builder<? extends LivingEntity>> consumer;
+        public final TriConsumer<Builder<? extends LivingEntity>, String, String> consumer;
 
-        Flag(String name, Consumer<Builder<? extends LivingEntity>> consumer) {
+        Flag(String name, TriConsumer<Builder<? extends LivingEntity>, String, String> consumer) {
             this.name = name;
             this.consumer = consumer;
         }
 
         Flag(String name) {
-            this(name, builder -> {
+            this(name, (builder, redirectName1, redirectName2) -> {
             });
         }
 
@@ -269,5 +244,10 @@ public class Skill<T extends LivingEntity> {
 
     public ResourceKey<Skill<?>> getResourceKey() {
         return Registries.SKILL.getResourceKey(this).get();
+    }
+
+    @Override
+    public String toString() {
+        return "BreaBlast-Skill{key=" + getResourceKey() + ", behaviors=" + Arrays.toString(behaviors.keySet().toArray()) + "}";
     }
 }

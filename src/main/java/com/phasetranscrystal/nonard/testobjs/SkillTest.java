@@ -58,25 +58,27 @@ public class SkillTest {
                         }
                     })
                     .inactive(builder -> builder
-                            .onHurt((event, data) -> data.releaseEnergy(1, false))
-                            .onAttack((event, data) -> data.chargeEnergy(2))
-                            .onKill((event, data) -> data.chargeEnergy(5))
-                            .energyChanged((data, i) -> data.getEntity().displayClientMessage(Component.literal("Energy " + (i >= 0 ? "§a+" : "§c-") + i), true))
+                            .onHurt((event, data) -> data.addEnergy(-1))
+                            .onAttack((event, data) -> data.addEnergy(2))
+                            .onKillTarget((event, data) -> data.addEnergy(5))
+                            .inactiveEnergyChanged((data, i) -> {
+                                data.getEntity().displayClientMessage(Component.literal("Energy " + (i >= 0 ? "§a+" : "§c-") + i), true);
+                            })
                             .chargeChanged((data, i) -> {
                                 data.getEntity().displayClientMessage(Component.literal("Charge " + (i >= 0 ? "§a+" : "§c-") + i), true);
                                 ResourceLocation location = ResourceLocation.fromNamespaceAndPath(Nonard.MOD_ID, "skill_test");
                                 data.addAutoCleanAttribute(new AttributeModifier(location, 0.5 * data.getCharge(), AttributeModifier.Operation.ADD_VALUE), Attributes.MOVEMENT_SPEED);
                             })
-                            .reachReady(data -> data.getEntity().displayClientMessage(Component.literal("ReachReady!"), false))
-                            .reachStop(data -> data.getEntity().displayClientMessage(Component.literal("ReachStop!"), false))
-                            .end(data -> {
+                            .onChargeReady(data -> data.getEntity().displayClientMessage(Component.literal("ReachReady!"), false))
+                            .onChargeFull(data -> data.getEntity().displayClientMessage(Component.literal("ReachStop!"), false))
+                            .endWith(data -> {
                                 data.putCacheData("charge_consume", data.getCharge() + 1 + "", true, true);
                                 data.setCharge(0);
                             })
                     )
-                    .judge((data, name) -> data.getEntity().level().isNight())
+                    .judge((data, name) -> !"active".equals(name.orElse("")) || (data.getEntity().level().isNight() && data.getCharge() >= 1))
                     .active(builder -> builder
-                            .start(data -> PacketDistributor.sendToPlayersTrackingChunk(
+                            .startWith(data -> PacketDistributor.sendToPlayersTrackingChunk(
                                     (ServerLevel) data.getEntity().level(), new ChunkPos(data.getEntity().blockPosition()),
                                     new SpawnParticlePacket("baozi", ParticlesTest.LARGE_SPORE_RING_SPRAY, data.getEntity().getPosition(0).toVector3f())
                             ))
@@ -84,16 +86,18 @@ public class SkillTest {
                                 data.getEntity().displayClientMessage(Component.literal("activeTick"), true);
                                 data.modifyActiveEnergy(-1);
                             })
-                            .end(data -> {
+                            .endWith(data -> {
                                 data.getEntity().jumpFromGround();
                                 data.getEntity().addDeltaMovement(new Vec3(0, 0.1, 0));
                                 data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * data.getCacheDataAsInt("charge_consume", 0, true), 2));
                             })
                     )
-                    .stateChange((data, behavior) -> {
-                        if (!behavior.isActive() && data.getActiveTimes() == 5) data.requestDisable();
-                        else
-                            data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + behavior + " time " + data.getActiveTimes()), false);
+                    .onBehaviorChange((data, behavior) -> {
+                        if (data.getActiveTimes() == 5) data.requestDisable();
+                        else {
+                            data.getEntity().displayClientMessage(Component.literal("StateChanged: to " + behavior.map(s -> "\"" + behavior + "\"").orElse("null") + " time " + data.getActiveTimes()), false);
+                            if ("active".equals(behavior.orElse(""))) data.consumeCharge();
+                        }
                     })
                     .end(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
     );
@@ -129,7 +133,7 @@ public class SkillTest {
                 if (usedHand == InteractionHand.OFF_HAND && !player.getData(SKILL_ATTACHMENT).isEnabled()) {
                     player.getData(SKILL_ATTACHMENT).requestEnable();
                 } else {
-                    player.getData(SKILL_ATTACHMENT).switchToIfNot(true, "default");
+                    player.getData(SKILL_ATTACHMENT).switchToIfNot("active");
                 }
             }
             return InteractionResultHolder.success(player.getItemInHand(usedHand));
