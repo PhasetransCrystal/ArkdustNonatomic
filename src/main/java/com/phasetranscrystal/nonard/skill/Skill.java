@@ -117,6 +117,14 @@ public class Skill<T extends LivingEntity> {
             return builder.copyFrom(skill);
         }
 
+        /**
+         * @param energyCost 能量上限
+         * @param maxCharge 充能层数上限
+         * @param initialEnergy 初始能量
+         * @param initialCharge 初始充能层数
+         * @param activeEnergy 技能开启后能量上限
+         * @param <T> 技能释放主体
+         */
         public static <T extends LivingEntity> Builder<T> of(int energyCost, int maxCharge, int initialEnergy, int initialCharge, int activeEnergy) {
             return new Builder<>(energyCost, maxCharge, initialEnergy, initialCharge, activeEnergy);
         }
@@ -133,11 +141,17 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
+        /**
+         * 当技能被设置为*启用*状态时触发
+         */
         public Builder<T> start(Consumer<SkillData<T>> consumer) {
             onStart = consumer;
             return this;
         }
 
+        /**
+         * 判断当前状态是否可切换为active阶段？？
+         */
         public Builder<T> inactive(Consumer<Behavior.Builder<T>> inactive) {
             inactive.accept(this.behaviors.computeIfAbsent("inactive", key -> Behavior.Builder.create()));
             return this;
@@ -165,6 +179,13 @@ public class Skill<T extends LivingEntity> {
             return this;
         }
 
+        /**
+         * 为技能增加事件监听器<br>
+         * 技能处于*启用*状态时可被监听触发
+         * @param clazz 需要监听的实体事件
+         * @param consumer 事件行为
+         * @param <E> 被监听的事件
+         */
         public <E extends Event> Builder<T> onEvent(Class<E> clazz, BiConsumer<E, SkillData<T>> consumer) {
             listeners.put(clazz, consumer);
             return this;
