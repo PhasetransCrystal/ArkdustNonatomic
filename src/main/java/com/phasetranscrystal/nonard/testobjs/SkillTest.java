@@ -33,6 +33,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.lwjgl.glfw.GLFW;
 
 public class SkillTest {
 
@@ -58,6 +59,8 @@ public class SkillTest {
                         }
                     })
                     .inactive(builder -> builder
+                            //按键监听测试
+                            .setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) -> {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
                             .onHurt((event, data) -> data.addEnergy(-1))
                             .onAttack((event, data) -> data.addEnergy(2))
                             .onKillTarget((event, data) -> data.addEnergy(5))
@@ -101,6 +104,18 @@ public class SkillTest {
                     })
                     .end(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
     );
+
+    public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> OLD_MA = SKILL.register("old_ma", () -> {
+        return Skill.Builder
+                .<ServerPlayer>of(50, 3, 0, 0, 50)
+                .start(data -> data.getEntity().displayClientMessage(Component.literal("OldMaInit"), false))
+                .judge((data, name) -> data.getCharge() == 3)
+                .addBehavior(builder -> {
+                    builder.setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) -> {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
+                            .endWith(data -> data.getEntity().displayClientMessage(Component.literal("OldMaEnd"), false));
+                }, "key test")
+                .end();
+    });
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Nonard.MOD_ID);
 

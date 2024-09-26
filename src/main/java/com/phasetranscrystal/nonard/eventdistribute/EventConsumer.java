@@ -1,6 +1,7 @@
 package com.phasetranscrystal.nonard.eventdistribute;
 
 import com.phasetranscrystal.nonard.Nonard;
+import com.phasetranscrystal.nonard.event.KeyInputEvent;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.ICancellableEvent;
@@ -22,6 +23,9 @@ public class EventConsumer {
 
     public static void bootstrapConsumer() {
 //        addListener(EntityJoinLevelEvent.class);
+        //todo 需要添加一种方法用来增加额外的事件，而不用修改这个类
+        addListener(KeyInputEvent.class);
+
         addListener(EntityTickEvent.Post.class);
 
         addListener(LivingIncomingDamageEvent.class);
