@@ -2,7 +2,7 @@ package com.phasetranscrystal.nonard.opesystem;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.phasetranscrystal.nonard.Nonard;
+import com.phasetranscrystal.nonard.ArkdustNonatomic;
 import com.phasetranscrystal.nonatomic.EventHooks;
 import com.phasetranscrystal.nonatomic.Helper;
 import com.phasetranscrystal.nonatomic.Nonatomic;
@@ -22,7 +22,7 @@ import org.joml.Math;
 import java.util.*;
 
 public class ArkOpeHandler extends OpeHandlerNoRepetition {
-    public static final ResourceLocation CONTAINER_ID = ResourceLocation.fromNamespaceAndPath(Nonard.MOD_ID, "operators");
+    public static final ResourceLocation CONTAINER_ID = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID, "operators");
     public static final Logger LOGGER = LogManager.getLogger("ArkdustNona:OpeHandler");
 
     public static final Codec<ArkOpeHandler> CODEC = RecordCodecBuilder.create(a -> a.group(

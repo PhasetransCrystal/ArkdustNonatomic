@@ -1,6 +1,5 @@
 package com.phasetranscrystal.nonard.opesystem;
 
-import com.phasetranscrystal.nonard.preinfo.OperatorBaseAttributes;
 import com.phasetranscrystal.nonatomic.Registries;
 import com.phasetranscrystal.nonatomic.core.OperatorType;
 import net.minecraft.core.BlockPos;

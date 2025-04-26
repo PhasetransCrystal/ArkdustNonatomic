@@ -1,7 +1,5 @@
 package com.phasetranscrystal.nonard;
 
-import com.phasetranscrystal.nonard.eventdistribute.DataAttachmentRegistry;
-import com.phasetranscrystal.nonard.eventdistribute.EventConsumer;
 import com.phasetranscrystal.nonard.opesystem.ArkOpeHandler;
 import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
 import com.phasetranscrystal.nonard.testobjs.TestObjects;
@@ -15,26 +13,24 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-@Mod(Nonard.MOD_ID)
-public class Nonard {
-    public static final String MOD_ID = "nonard";
+@Mod(ArkdustNonatomic.MODID)
+public class ArkdustNonatomic {
+    public static final String MODID = "arkdust_nona";
 
-    public Nonard(IEventBus modEventBus, ModContainer modContainer) {
+    public ArkdustNonatomic(IEventBus modEventBus, ModContainer modContainer) {
         ATTACHMENT_REG.register(modEventBus);
         GameBusConsumer.registerHandlerEvents(s -> s.overworld().getData(DATA.get()));
 
         AttributeTypeRegistry.REGISTER.register(modEventBus);
-        DataAttachmentRegistry.REGISTER.register(modEventBus);
 
         TestObjects.bootstrap(modEventBus);
-        EventConsumer.bootstrapConsumer();
     }
 
     public static ResourceLocation location(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_REG = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_REG = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<ArkOpeHandler.WorldAttach>> DATA =
             ATTACHMENT_REG.register("operator_infos", () -> AttachmentType.builder(ArkOpeHandler.WorldAttach::new).serialize(ArkOpeHandler.WorldAttach.CODEC).build());
 }

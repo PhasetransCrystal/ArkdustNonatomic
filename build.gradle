@@ -140,11 +140,15 @@ configurations {
 
 dependencies {
 
-    implementation 'com.github.PhasetransCrystal:Nonatomic:1.0.0-neoforge1.21.1'
+    implementation 'com.github.PhasetransCrystal:BreaNonatomic:master-SNAPSHOT'
+
+    implementation 'com.github.PhasetransCrystal:BreaHoriz:main-SNAPSHOT'
+
+    implementation 'com.github.PhasetransCrystal:BreaBlast:55f2caab27'
 
     implementation "curse.maven:modern-ui-${modernui_path}"
 
-    implementation "curse.maven:geckolib-${geolib_path}"
+//    implementation "curse.maven:geckolib-${geolib_path}"
 
     // Modern UI core framework
     implementation "icyllis.modernui:ModernUI-Core:${modernui_version}"

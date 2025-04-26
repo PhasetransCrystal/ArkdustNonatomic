@@ -1,4 +1,4 @@
-package com.phasetranscrystal.nonard.preinfo;
+package com.phasetranscrystal.nonard.opesystem;
 
 import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
 import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction;

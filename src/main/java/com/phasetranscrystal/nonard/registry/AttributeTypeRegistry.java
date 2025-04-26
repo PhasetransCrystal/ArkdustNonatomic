@@ -1,6 +1,6 @@
 package com.phasetranscrystal.nonard.registry;
 
-import com.phasetranscrystal.nonard.Nonard;
+import com.phasetranscrystal.nonard.ArkdustNonatomic;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
@@ -9,7 +9,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 //@Deprecated
 public class AttributeTypeRegistry {
-    public static final DeferredRegister<Attribute> REGISTER = DeferredRegister.create(Registries.ATTRIBUTE, Nonard.MOD_ID);
+    public static final DeferredRegister<Attribute> REGISTER = DeferredRegister.create(Registries.ATTRIBUTE, ArkdustNonatomic.MODID);
 //    public static final DeferredHolder<Attribute, Attribute> EXPENDED_HEALTH = REGISTER.register("entity.max_health",
 //            () -> new RangedAttribute("attribute.name.nonard.entity.max_health", 1.0, 1.0, Double.MAX_VALUE).setSyncable(true)
 //    );

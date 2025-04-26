@@ -1,4 +1,4 @@
-package com.phasetranscrystal.nonard.preinfo;
+package com.phasetranscrystal.nonard.opesystem;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
