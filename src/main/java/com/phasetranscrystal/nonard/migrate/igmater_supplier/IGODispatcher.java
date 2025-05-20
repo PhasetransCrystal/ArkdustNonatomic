@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-public record IGMDispatcher<F, T>(Class<F> fromClass, Class<T> toClass,
-                                  Function<IGMaterialSupplier<F>, IGMaterialSupplier<T>> transformer) implements IGMaterialSupplier.Dispatcher<F, T> {
+public record IGODispatcher<F, T>(Class<F> fromClass, Class<T> toClass,
+                                  Function<IGObjectsSupplier<F>, IGObjectsSupplier<T>> transformer) implements IGObjectsSupplier.Dispatcher<F, T> {
     @Override
     public Class<F> originalTargetClass() {
         return fromClass;
@@ -18,17 +18,17 @@ public record IGMDispatcher<F, T>(Class<F> fromClass, Class<T> toClass,
     }
 
     @Override
-    public IGMaterialSupplier<T> transform(IGMaterialSupplier<F> obj) {
+    public IGObjectsSupplier<T> transform(IGObjectsSupplier<F> obj) {
         return transformer.apply(obj);
     }
 
-    public List<IGMaterialSupplier<T>> transformAll(List<IGMaterialSupplier<?>> objs) {
+    public List<IGObjectsSupplier<T>> transformAll(List<IGObjectsSupplier<?>> objs) {
         if (objs == null || objs.isEmpty()) {
             return List.of();
         }
-        List<IGMaterialSupplier<T>> result = new ArrayList<>();
+        List<IGObjectsSupplier<T>> result = new ArrayList<>();
         objs.stream().filter(c -> c.targetClass().equals(fromClass))
-                .map(f -> transformer.apply((IGMaterialSupplier<F>) f))
+                .map(f -> transformer.apply((IGObjectsSupplier<F>) f))
                 .filter(Objects::nonNull)
                 .forEach(result::add);
         return result;
