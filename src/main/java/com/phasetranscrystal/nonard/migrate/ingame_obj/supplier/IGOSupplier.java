@@ -1,16 +1,17 @@
-package com.phasetranscrystal.nonard.migrate.igmater_supplier;
+package com.phasetranscrystal.nonard.migrate.ingame_obj.supplier;
 
 import com.phasetranscrystal.nonard.ArkdustNonatomic;
+import com.phasetranscrystal.nonard.migrate.ingame_obj.ExtractResultPreview;
 import net.minecraft.resources.ResourceLocation;
 
-public interface IGObjectsSupplier<T> {
+public interface IGOSupplier<T> {
     ResourceLocation NAME = ArkdustNonatomic.location("igm_supplier");
 
     Class<T> targetClass();
 
     int size();
 
-    IGObjectsSupplier<T> createSnapshot();
+    IGOSupplier<T> createSnapshot();
 
     T get(int index);
 
@@ -24,6 +25,8 @@ public interface IGObjectsSupplier<T> {
 
     boolean isSnapshot();
 
+    void bindExtractResultPreview(ExtractResultPreview<T> resultPreview);
+
     interface Converter<F, T> {
         ResourceLocation NAME = ArkdustNonatomic.location("igm_supplier_dispatcher");
 
@@ -31,7 +34,7 @@ public interface IGObjectsSupplier<T> {
 
         Class<T> resultTargetClass();
 
-        IGObjectsSupplier<T> transform(IGObjectsSupplier<F> obj);
+        IGOSupplier<T> transform(IGOSupplier<F> obj);
     }
 
 //    // 组供应器
