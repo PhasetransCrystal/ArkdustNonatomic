@@ -87,16 +87,6 @@ public class MergedIGOSupplier<T> implements IGOSupplier<T>, IMultiIGOS {
         return pair.getFirst().isVariable(pair.getSecond());
     }
 
-    @Override
-    public boolean isSnapshot() {
-        return isSnapshot;
-    }
-
-    @Override
-    public void bindExtractResultPreview(ExtractResultPreview<T> resultPreview) {
-        //TODO
-    }
-
     //--[MultiIGOS]--
 
     @Override
