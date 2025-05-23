@@ -1,16 +1,9 @@
-package com.phasetranscrystal.nonard.migrate.ingame_obj.supplier;
+package com.phasetranscrystal.nonard.migrate.ingame_obj_se.supplier;
 
 import com.phasetranscrystal.nonard.ArkdustNonatomic;
-import com.phasetranscrystal.nonard.migrate.ingame_obj.ExtractResultPreview;
-import com.phasetranscrystal.nonard.migrate.ingame_obj.IGOExtractor;
-import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import com.phasetranscrystal.nonard.migrate.ingame_obj_se.extractor.ExtractResultPreview;
 import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nullable;
-import java.util.Map;
 import java.util.Optional;
 
 public interface IGOSupplier<T> {
@@ -31,7 +24,13 @@ public interface IGOSupplier<T> {
     //return: object remain that can't add in. empty means no remained.
     Optional<T> add(int index, T value);
 
+    //return: count added
     double addCount(int index, double count);
+
+    //return: count removed
+    default double removeCount(int index, double count) {
+        return -addCount(index, -count);
+    }
 
     //return: extracted object. empty means nothing extracted.
     Optional<T> extractCount(int index, double count, boolean greedy);

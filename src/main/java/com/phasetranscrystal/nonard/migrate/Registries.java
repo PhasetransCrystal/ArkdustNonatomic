@@ -1,8 +1,8 @@
 package com.phasetranscrystal.nonard.migrate;
 
 import com.phasetranscrystal.nonard.ArkdustNonatomic;
-import com.phasetranscrystal.nonard.migrate.ingame_obj.IGOExtractor;
-import com.phasetranscrystal.nonard.migrate.ingame_obj.supplier.IGOSupplier;
+import com.phasetranscrystal.nonard.migrate.ingame_obj_se.extractor.IGOExtractor;
+import com.phasetranscrystal.nonard.migrate.ingame_obj_se.supplier.IGOSupplier;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.neoforged.bus.api.SubscribeEvent;

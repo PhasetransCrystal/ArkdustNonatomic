@@ -1,7 +1,7 @@
 package com.phasetranscrystal.nonard.opesystem.skill;
 
 import com.phasetranscrystal.blast.skill.Skill;
-import com.phasetranscrystal.nonard.migrate.ingame_obj.IGOExtractor;
+import com.phasetranscrystal.nonard.migrate.ingame_obj_se.extractor.IGOExtractor;
 import com.phasetranscrystal.nonard.opesystem.OperatorEntity;
 import net.minecraft.resources.ResourceLocation;
 

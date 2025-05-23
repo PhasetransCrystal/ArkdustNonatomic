@@ -1,4 +1,4 @@
-package com.phasetranscrystal.nonard.migrate.ingame_obj.supplier;
+package com.phasetranscrystal.nonard.migrate.ingame_obj_se.supplier;
 
 import javax.annotation.Nonnull;
 import java.util.List;
