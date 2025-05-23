@@ -13,8 +13,6 @@ public interface IGOSupplier<T> {
 
     int size();
 
-    IGOSupplier<T> createSnapshot();
-
     T get(int index);
 
     boolean set(int index, T value);
@@ -35,28 +33,29 @@ public interface IGOSupplier<T> {
     //return: extracted object. empty means nothing extracted.
     Optional<T> extractCount(int index, double count, boolean greedy);
 
-
     boolean isVariable();
 
     default boolean isVariable(int index) {
         return isVariable();
     }
 
+    //---[供应器快照]---
+
+    IGOSupplier<T> createSnapshot();
 
     default boolean isSnapshot() {
         return false;
     }
 
-    default boolean isSnapshotOf(IGOSupplier<T> supplier) {
-        return false;
-    }
-
+    //---[结果预览可用性与变动提醒]---
 
     boolean checkAvailability(ExtractResultPreview<T> resultPreview);
 
     void bootstrapResultPreview(ExtractResultPreview<T> resultPreview);
 
     void addChangeFeedback(IGOSupplier<T> supplier);
+
+    void removeChangeFeedback(IGOSupplier<T> supplier);
 
     void boostrapChange();
 
