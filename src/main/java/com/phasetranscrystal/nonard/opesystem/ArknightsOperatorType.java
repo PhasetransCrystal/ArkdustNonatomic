@@ -6,14 +6,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Random;
 
-public abstract class ArknightsOperatorType extends OperatorType {
+public abstract class ArknightsOperatorType<T extends OperatorEntity> extends OperatorType {
 //    public final OperatorBaseAttributes baseAttributes;
 
+
+    @Override
+    public abstract @Nullable EntityType<T> getEntityType();
 
     @Override
     public BlockPos findPlaceForGenerate(ServerPlayer player, @Nullable BlockPos pos) {
