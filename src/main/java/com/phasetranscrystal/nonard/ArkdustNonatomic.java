@@ -1,6 +1,7 @@
 package com.phasetranscrystal.nonard;
 
 import com.phasetranscrystal.nonard.opesystem.ArkOpeHandler;
+import com.phasetranscrystal.nonard.opesystem.info.GeneralOperatorInfo;
 import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
 import com.phasetranscrystal.nonard.testobjs.TestObjects;
 import com.phasetranscrystal.nonatomic.GameBusConsumer;
@@ -16,6 +17,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 @Mod(ArkdustNonatomic.MODID)
 public class ArkdustNonatomic {
     public static final String MODID = "arkdust_nona";
+    private static GeneralOperatorInfo generalOperatorInfo;
 
     public ArkdustNonatomic(IEventBus modEventBus, ModContainer modContainer) {
         ATTACHMENT_REG.register(modEventBus);
@@ -24,6 +26,9 @@ public class ArkdustNonatomic {
         AttributeTypeRegistry.REGISTER.register(modEventBus);
 
         TestObjects.bootstrap(modEventBus);
+
+        //TODO bootstrap config loading
+        generalOperatorInfo = null;
     }
 
     public static ResourceLocation location(String path) {
@@ -33,4 +38,8 @@ public class ArkdustNonatomic {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_REG = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<ArkOpeHandler.WorldAttach>> DATA =
             ATTACHMENT_REG.register("operator_infos", () -> AttachmentType.builder(ArkOpeHandler.WorldAttach::new).serialize(ArkOpeHandler.WorldAttach.CODEC).build());
+
+    public static GeneralOperatorInfo getBasicOperatorInfo(){
+        return generalOperatorInfo;
+    }
 }

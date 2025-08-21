@@ -7,7 +7,7 @@ import com.phasetranscrystal.nonard.opesystem.OperatorEntity;
 import com.phasetranscrystal.nonatomic.core.OperatorInfo;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
-public class OperatorSkillData extends OperatorInfo {
+public class OperatorSkillData extends OperatorInfo<OperatorSkillData> {
 //    public final OperatorData belonging;
     protected int checked;
     protected Object2IntMap<Skill<?>> levelBySkill;
@@ -18,17 +18,17 @@ public class OperatorSkillData extends OperatorInfo {
     }
 
     @Override
-    public <D extends OperatorInfo> boolean merge(D newData) {
+    public boolean merge(OperatorSkillData newData) {
         return false;
     }
 
     @Override
-    public <D extends OperatorInfo> D createExternal() {
+    public OperatorSkillData createExternal() {
         return null;
     }
 
     @Override
-    public <T extends OperatorInfo> T copy() {
+    public OperatorSkillData copy() {
         return null;
     }
 }
