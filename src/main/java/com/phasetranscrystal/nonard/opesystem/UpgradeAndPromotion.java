@@ -146,12 +146,12 @@ public class UpgradeAndPromotion extends OperatorInfo {
     }
 
     @Override
-    public <T extends OperatorInfo> boolean merge(T newData) {
+    public boolean merge(OperatorInfo newData) {
         return false;
     }
 
     @Override
-    public <T extends OperatorInfo> T createExternal() {
+    public OperatorInfo createExternal() {
         return null;
     }
 
