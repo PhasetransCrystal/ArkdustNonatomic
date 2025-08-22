@@ -14,7 +14,7 @@ public interface Trait {
      * @param operator 要处理的干员
      */
     default void handle(OperatorEntity operator) {
-        TraitContext context = new TraitContext(operator, this);
+        Context context = new Context(operator, this);
 
         if (!executeInterceptors(context)) {
             return;
@@ -32,7 +32,7 @@ public interface Trait {
     /**
      * 实际的特性处理逻辑
      */
-    void doHandle(OperatorEntity operator, TraitContext context);
+    void doHandle(OperatorEntity operator, Context context);
 
     List<TraitInterceptor> interceptors = new ArrayList<>();
 
@@ -40,7 +40,7 @@ public interface Trait {
         interceptors.add(interceptor);
     }
 
-    private static boolean executeInterceptors(TraitContext context) {
+    private static boolean executeInterceptors(Context context) {
         for (TraitInterceptor interceptor : interceptors) {
             interceptor.intercept(context);
             if (context.isCanceled()) {
@@ -50,12 +50,12 @@ public interface Trait {
         return true;
     }
 
-     class TraitContext {
+     class Context {
         private final OperatorEntity operator;
         private final Trait trait;
         private boolean canceled = false;
 
-        private TraitContext(OperatorEntity operator, Trait trait) {
+        private Context(OperatorEntity operator, Trait trait) {
             this.operator = operator;
             this.trait = trait;
         }
