@@ -1,5 +1,6 @@
 package com.phasetranscrystal.nonard.opesystem;
 
+import com.phasetranscrystal.nonard.opesystem.info.OperatorBasicInfo;
 import com.phasetranscrystal.nonard.opesystem.info.OperatorSkillInfo;
 import com.phasetranscrystal.nonard.opesystem.info.OperatorUpgradeInfo;
 import com.phasetranscrystal.nonatomic.Registries;
@@ -18,9 +19,10 @@ import java.util.Random;
 public abstract class ArknightsOperatorType<T extends OperatorEntity> extends OperatorType {
 
     //TODO 信息注册事件 信息与默认信息的合并
+    public final OperatorBasicInfo info;
     public final OperatorUpgradeInfo upgrade;
     public final List<OperatorSkillInfo<T>> skills;//根据最低解锁等级排序
-    //职业 分支 天赋 阵营 种族 性别 基本信息与介绍 武器 模组 语音
+    //职业 分支 天赋 武器 模组
 
 
     @Override
@@ -47,7 +49,7 @@ public abstract class ArknightsOperatorType<T extends OperatorEntity> extends Op
 
     public String toOperatorKey(){
         ResourceLocation location = getKey().location();
-        return "arkdust.operator." + location.getNamespace() + '.' + location.getPath();
+        return "arkdust.operator.type." + location.getNamespace() + '.' + location.getPath();
     }
 
     public String getNameTransKey(){
