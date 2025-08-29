@@ -30,12 +30,12 @@ public class OperatorSkill<O extends OperatorEntity> {
 
     public String skillNameI18nKey(){
         ResourceLocation location = skill.getResourceKey().location();
-        return "arkdust_nona.skill." + location.getNamespace() + "." + location.getPath() + ".name";
+        return "arkdust.nona.skill." + location.getNamespace() + "." + location.getPath() + ".name";
     }
 
     public String skillExplainI18nKey(){
         ResourceLocation location = skill.getResourceKey().location();
-        return "arkdust_nona.skill." + location.getNamespace() + "." + location.getPath() + ".explain";
+        return "arkdust.nona.skill." + location.getNamespace() + "." + location.getPath() + ".explain";
     }
 
     public HashSet<SkillFlags> getSkillFlagsCopied() {

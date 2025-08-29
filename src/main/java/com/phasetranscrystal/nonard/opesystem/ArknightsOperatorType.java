@@ -49,7 +49,7 @@ public abstract class ArknightsOperatorType<T extends OperatorEntity> extends Op
 
     public String toOperatorKey(){
         ResourceLocation location = getKey().location();
-        return "arkdust.operator.type." + location.getNamespace() + '.' + location.getPath();
+        return "arkdust.nona.operator.type." + location.getNamespace() + '.' + location.getPath();
     }
 
     public String getNameTransKey(){
