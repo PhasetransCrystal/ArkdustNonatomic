@@ -2,7 +2,7 @@ package com.phasetranscrystal.nonard.migrate.nona_quench;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.phasetranscrystal.nonard.migrate.nona_quench.meta.WeaponAttribute;
+import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
 import com.phasetranscrystal.nonard.migrate.nona_quench.part.PartType;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Math;
@@ -21,7 +21,7 @@ public class AssembleWeaponType {
         private final int height;   //游戏中该武器组装蓝图的高度
         private final Table<Integer, Integer, PointChain> parts;
         private final HashSet<PointChain> chains = new HashSet<>();
-        private final HashMap<ResourceLocation, WeaponAttribute> attributes = new HashMap<>();
+        private final HashMap<ResourceLocation, EquipAttribute> attributes = new HashMap<>();
         private boolean offhandAllowed = false;
 
         public Builder(int blueprintWidth, int blueprintHeight) {
@@ -46,10 +46,10 @@ public class AssembleWeaponType {
             return this;
         }
 
-        public Builder addPart(PartType part, ResourceLocation partId, Point... points){
+        public Builder addPart(PartType part, ResourceLocation partId, Point... points) {
             int x, y;
             PointChain chain = new PointChain(part, partId, points);
-            for(Point p : points){
+            for (Point p : points) {
                 x = p.x;
                 y = p.y;
                 if (x < 0 || y < 0 || x >= width || y >= height) {
@@ -64,12 +64,13 @@ public class AssembleWeaponType {
             return this;
         }
 
-        public Builder addWeaponAttribute(ResourceLocation id, double minValue, double maxValue, double defaultValue){
+        public Builder addWeaponAttribute(ResourceLocation id, double minValue, double maxValue, double defaultValue) {
             if (minValue <= maxValue) {
                 throw new IllegalArgumentException("max value must be greater than min value");
             }
             defaultValue = Math.clamp(minValue, maxValue, defaultValue);
-
+            this.attributes.put(id, new EquipAttribute(id, minValue, maxValue, defaultValue));
+            return this;
         }
 
         public Builder offhandable() {
