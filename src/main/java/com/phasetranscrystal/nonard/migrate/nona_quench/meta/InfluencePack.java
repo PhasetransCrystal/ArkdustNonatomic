@@ -13,22 +13,27 @@ import org.antlr.v4.runtime.misc.MultiMap;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class InfluencePack {
 
     public static final ResourceLocation ROOT = ResourceLocation.fromNamespaceAndPath("nona_quench", "equipments");
     public final ResourceLocation root;
+    //先都private 需要的时候再打洞
+    public final PerkStrength perkStrength;
     private final ResourceLocation[] path;
     private final Map<Holder<Attribute>, TriNum> attribute;
     private final Map<ResourceLocation, TriNum> equipAttribute;
     private final Map<Class<Event>, Consumer<Event>> listeners;
 
     public InfluencePack(List<ResourceLocation> path,
+                         PerkStrength perkStrength,
                          Map<Holder<Attribute>, TriNum> attribute,
                          Map<ResourceLocation, TriNum> equipAttribute,
                          Map<Class<Event>, Consumer<Event>> listeners) {
         this.path = path.toArray(new ResourceLocation[0]);
         this.root = combine(path);
+        this.perkStrength = perkStrength;
         this.attribute = attribute;
         this.equipAttribute = equipAttribute;
         this.listeners = listeners;
@@ -94,7 +99,8 @@ public final class InfluencePack {
 
     public record Child(MultiMap<Holder<Attribute>, AttributeModifier> attributeModifiers,
                         MultiMap<Class<? extends Event>, Consumer<? extends Event>> listeners,
-                        MultiMap<ResourceLocation, EquipAttribute.Modifier> modifiers) {
+                        MultiMap<ResourceLocation, EquipAttribute.Modifier> modifiers,
+                        PerkStrength perkStrength) {
         //Render attach todo
         //Entity AI insert todo
     }
@@ -161,7 +167,10 @@ public final class InfluencePack {
                 List<Consumer<? extends Event>> consumers = List.copyOf(consumer);
                 listeners.put((Class<Event>) clazz, e -> consumers.forEach(c -> ((Consumer<Event>) c).accept(e)));
             });
-            return new InfluencePack(path, attributes, equipAtr, listeners);
+
+            PerkStrength ps = PerkStrength.group(children.stream().map(Child::perkStrength));
+
+            return new InfluencePack(path, ps, attributes, equipAtr, listeners);
         }
     }
 
