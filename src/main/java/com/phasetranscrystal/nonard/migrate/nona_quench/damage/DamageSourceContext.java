@@ -7,18 +7,26 @@ import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-public record DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, ModifyType, Double> damageTypeContent,
+//TODO 元素转映部分
+//载入点：
+public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
+                                  Table<DefenceLayer, ModifyType, Double> damageContent,
+                                  List<Consumer<LivingDamageEvent.Pre>> preModifier,
                                   List<Consumer<LivingDamageEvent.Pre>> extraModifier,
                                   List<Consumer<LivingDamageEvent.Post>> feedback) {
-    public DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, ModifyType, Double> damageTypeContent,
-                               List<Consumer<LivingDamageEvent.Pre>> extraModifier, List<Consumer<LivingDamageEvent.Post>> feedback) {
+    public DamageSourceContext(boolean actuallyDamage, int cooldownTick,
+                               Table<DefenceLayer, ModifyType, Double> damageContent,
+                               List<Consumer<LivingDamageEvent.Pre>> preModifier,
+                               List<Consumer<LivingDamageEvent.Pre>> extraModifier,
+                               List<Consumer<LivingDamageEvent.Post>> feedback) {
         this.actuallyDamage = actuallyDamage;
-        this.damageTypeContent =
-                damageTypeContent instanceof ImmutableTable<DefenceLayer, ModifyType, Double> immutable ? immutable : ImmutableTable.copyOf(damageTypeContent);
+        this.cooldownTick = Math.max(0, cooldownTick);
+        this.damageContent =
+                damageContent instanceof ImmutableTable<DefenceLayer, ModifyType, Double> immutable ? immutable : ImmutableTable.copyOf(damageContent);
+        this.preModifier = List.copyOf(preModifier);
         this.extraModifier = List.copyOf(extraModifier);
         this.feedback = List.copyOf(feedback);
     }
@@ -44,10 +52,12 @@ public record DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, Mo
     }
 
     public static class Builder {
+        private int cooldownTick = 9;
         private boolean actuallyDamage;
         private Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> damageTypeContent;
-        private List<Consumer<LivingDamageEvent.Pre>> extraModifier = new ArrayList<>();
-        private List<Consumer<LivingDamageEvent.Post>> feedback = new ArrayList<>();
+        private final List<Consumer<LivingDamageEvent.Pre>> preModifier = new ArrayList<>();
+        private final List<Consumer<LivingDamageEvent.Pre>> extraModifier = new ArrayList<>();
+        private final List<Consumer<LivingDamageEvent.Post>> feedback = new ArrayList<>();
         private boolean contentLocked = false;
 
         public Builder() {
@@ -56,10 +66,15 @@ public record DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, Mo
 
         public Builder(DamageSourceContext context, boolean contentLocked) {
             this.actuallyDamage = context.actuallyDamage;
-            this.damageTypeContent = contentLocked ? context.damageTypeContent : HashBasedTable.create(context.damageTypeContent);
+            this.damageTypeContent = contentLocked ? context.damageContent : HashBasedTable.create(context.damageContent);
             this.extraModifier.addAll(context.extraModifier);
             this.feedback.addAll(context.feedback);
             this.contentLocked = contentLocked;
+        }
+
+        public Builder setCooldownTick(int tick) {
+            this.cooldownTick = tick;
+            return this;
         }
 
         public Builder actuallyDamage() {
@@ -117,6 +132,34 @@ public record DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, Mo
             return this;
         }
 
+        public Builder addPreModifier(Consumer<LivingDamageEvent.Pre> modifier) {
+            this.preModifier.add(modifier);
+            return this;
+        }
+
+        public Builder addAllPreModifiers(Collection<Consumer<LivingDamageEvent.Pre>> modifiers) {
+            this.preModifier.addAll(modifiers);
+            return this;
+        }
+
+        public Builder addModifier(Consumer<LivingDamageEvent.Pre> modifier, boolean isPreModifiers) {
+            return isPreModifiers ? this.addPreModifier(modifier) : this.addExtraModifier(modifier);
+        }
+
+        public Builder addAllModifiers(Collection<Consumer<LivingDamageEvent.Pre>> modifiers, boolean isPreModifiers) {
+            return isPreModifiers ? this.addAllPreModifiers(modifiers) : this.addAllExtraModifiers(modifiers);
+        }
+
+        public Builder modifyPreModifierList(Consumer<List<Consumer<LivingDamageEvent.Pre>>> listConsumer) {
+            listConsumer.accept(this.preModifier);
+            return this;
+        }
+
+        public Builder modifyExtraModifierList(Consumer<List<Consumer<LivingDamageEvent.Pre>>> listConsumer) {
+            listConsumer.accept(this.extraModifier);
+            return this;
+        }
+
         public Builder addFeedback(Consumer<LivingDamageEvent.Post> feedback) {
             this.feedback.add(feedback);
             return this;
@@ -128,13 +171,11 @@ public record DamageSourceContext(boolean actuallyDamage, Table<DefenceLayer, Mo
         }
 
         public DamageSourceContext build() {
-            // 如果内容未被锁定，创建不可变副本
-            Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> finalContent =
-                    contentLocked ? damageTypeContent : ImmutableTable.copyOf(damageTypeContent);
-
             return new DamageSourceContext(
                     actuallyDamage,
-                    finalContent,
+                    cooldownTick,
+                    damageTypeContent,
+                    preModifier,
                     extraModifier,
                     feedback
             );

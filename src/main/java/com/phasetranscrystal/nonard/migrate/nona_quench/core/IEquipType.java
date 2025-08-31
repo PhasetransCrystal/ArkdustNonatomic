@@ -8,7 +8,7 @@ import net.minecraft.world.item.Item;
 
 import java.util.*;
 
-public interface IEquipType<I extends Item & IAssembleItem<I>>{//TODO basic equip item
+public interface IEquipType<I extends Item & IAssembleEquipItem<I>>{//TODO basic equip item
 
     int blueprintX();
 

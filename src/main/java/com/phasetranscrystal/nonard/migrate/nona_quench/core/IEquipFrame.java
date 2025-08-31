@@ -1,13 +1,12 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.core;
 
 import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
-import com.phasetranscrystal.nonard.migrate.nona_quench.meta.InfluencePack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 import java.util.Map;
 
-public interface IEquipFrame<T extends Item & IAssembleItem<T>> extends IInfluenceChildProvider {
+public interface IEquipFrame<T extends Item & IAssembleEquipItem<T>> extends IInfluenceChildProvider {
     IEquipType<? super T> getEquipType();
 
     default int getModuleGridWidth() {
