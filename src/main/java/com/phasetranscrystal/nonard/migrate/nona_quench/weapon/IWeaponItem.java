@@ -1,10 +1,10 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.weapon;
 
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IAssembleEquipItem;
+import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
 import com.phasetranscrystal.nonard.migrate.nona_quench.damage.DamageSourceContext;
 import net.minecraft.world.item.Item;
 
-public interface IAssembleWeaponItem<T extends Item & IAssembleEquipItem<T>> extends IAssembleEquipItem<T> {
+public interface IWeaponItem<T extends Item & IEquipItem<T>> extends IEquipItem<T> {
 
     DamageSourceContext getDamageContext();
 

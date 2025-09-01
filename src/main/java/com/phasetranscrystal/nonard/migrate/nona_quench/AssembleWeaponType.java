@@ -1,7 +1,7 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench;
 
 import com.google.common.collect.*;
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IAssembleEquipItem;
+import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
 import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipFrame;
 import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipType;
 import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
@@ -12,7 +12,7 @@ import org.joml.Math;
 
 import java.util.*;
 
-public class AssembleWeaponType<T extends Item & IAssembleEquipItem<T>> implements IEquipType<T> {//TODO
+public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEquipType<T> {//TODO
     public final int blueprintWidth;    //游戏中该武器组装蓝图的宽度
     public final int blueprintHeight;   //游戏中该武器组装蓝图的高度
     public final int moduleGridWidth;

@@ -6,7 +6,7 @@ import net.minecraft.world.item.Item;
 
 import java.util.Map;
 
-public interface IEquipFrame<T extends Item & IAssembleEquipItem<T>> extends IInfluenceChildProvider {
+public interface IEquipFrame<T extends Item & IEquipItem<T>> extends IInfluenceChildProvider {
     IEquipType<? super T> getEquipType();
 
     default int getModuleGridWidth() {
