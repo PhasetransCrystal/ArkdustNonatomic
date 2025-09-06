@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.Map;
 
 public class OperatorSkillGroup<E extends OperatorEntity> {
-    public static final Logger LOGGER = LogManager.getLogger("ArdNona:OpeSkill:SkillGroup");
+    public static final Logger LOGGER = LogManager.getLogger("ArkdustNona:OpeSkill:SkillGroup");
     public final int defaultChoose;
     public final ArknightsOperatorType<E> type;
     public final ImmutableList<OperatorSkill<E>> skills;

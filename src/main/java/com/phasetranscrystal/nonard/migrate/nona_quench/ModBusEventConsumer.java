@@ -9,7 +9,7 @@ public class ModBusEventConsumer {
 
     @SubscribeEvent
     public static void newRegistryEvent(NewRegistryEvent event){
-        event.register(Registries.PERKS);
+        event.register(NewRegistries.PERKS);
     }
 
 

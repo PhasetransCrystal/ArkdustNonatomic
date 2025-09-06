@@ -1,5 +1,8 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.meta;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.phasetranscrystal.horiz.EntityEventDistribute;
 import com.phasetranscrystal.horiz.Horiz;
 import net.minecraft.core.Holder;
@@ -9,7 +12,6 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
-import org.antlr.v4.runtime.misc.MultiMap;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -97,12 +99,14 @@ public final class InfluencePack {
         return true;
     }
 
-    public record Child(MultiMap<Holder<Attribute>, AttributeModifier> attributeModifiers,
-                        MultiMap<Class<? extends Event>, Consumer<? extends Event>> listeners,
-                        MultiMap<ResourceLocation, EquipAttribute.Modifier> modifiers,
+    public record Child(Multimap<Holder<Attribute>, AttributeModifier> attributeModifiers,
+                        Multimap<Class<? extends Event>, Consumer<? extends Event>> listeners,
+                        Multimap<ResourceLocation, EquipAttribute.Modifier> modifiers,
                         PerkStrength perkStrength) {
         //Render attach todo
         //Entity AI insert todo
+
+        public static final Child EMPTY = new Child(ImmutableMultimap.of(), ImmutableMultimap.of(), ImmutableMultimap.of(), PerkStrength.EMPTY);
     }
 
     public static class Builder {
@@ -134,38 +138,34 @@ public final class InfluencePack {
         public InfluencePack build() {
             Map<Holder<Attribute>, TriNum> attributes = new HashMap<>();
             Map<ResourceLocation, TriNum> equipAtr = new HashMap<>();
-            MultiMap<Class<? extends Event>, Consumer<? extends Event>> events = new MultiMap<>();
+            Multimap<Class<? extends Event>, Consumer<? extends Event>> events = HashMultimap.create();
 
             for (Child child : children) {
                 child.attributeModifiers.forEach((key, value) -> {
                     TriNum triNum = attributes.computeIfAbsent(key, k -> new TriNum());
-                    value.forEach(mfr -> {
-                        switch (mfr.operation()) {
-                            case ADD_VALUE -> triNum.add1(mfr.amount());
-                            case ADD_MULTIPLIED_BASE -> triNum.add2(mfr.amount());
-                            case ADD_MULTIPLIED_TOTAL -> triNum.add3(mfr.amount());
-                        }
-                    });
+                    switch (value.operation()) {
+                        case ADD_VALUE -> triNum.add1(value.amount());
+                        case ADD_MULTIPLIED_BASE -> triNum.add2(value.amount());
+                        case ADD_MULTIPLIED_TOTAL -> triNum.add3(value.amount());
+                    }
                 });
 
                 child.modifiers.forEach((key, value) -> {
                     TriNum triNum = equipAtr.computeIfAbsent(key, k -> new TriNum());
-                    value.forEach(mfr -> {
-                        switch (mfr.stage()) {
-                            case PLUS -> triNum.add1(mfr.value());
-                            case MULTIPLY_BASE -> triNum.add2(mfr.value());
-                            case MULTIPLY_TOTAL -> triNum.add3(mfr.value());
-                        }
-                    });
+                    switch (value.stage()) {
+                        case PLUS -> triNum.add1(value.value());
+                        case MULTIPLY_BASE -> triNum.add2(value.value());
+                        case MULTIPLY_TOTAL -> triNum.add3(value.value());
+                    }
                 });
 
                 events.putAll(child.listeners);
             }
 
             Map<Class<Event>, Consumer<Event>> listeners = new HashMap<>();
-            events.forEach((clazz, consumer) -> {
-                List<Consumer<? extends Event>> consumers = List.copyOf(consumer);
-                listeners.put((Class<Event>) clazz, e -> consumers.forEach(c -> ((Consumer<Event>) c).accept(e)));
+            events.keySet().forEach(key -> {
+                List<Consumer<? extends Event>> consumers = List.copyOf(events.get(key));
+                listeners.put((Class<Event>) key, e -> consumers.forEach(c -> ((Consumer<Event>) c).accept(e)));
             });
 
             PerkStrength ps = PerkStrength.group(children.stream().map(Child::perkStrength));

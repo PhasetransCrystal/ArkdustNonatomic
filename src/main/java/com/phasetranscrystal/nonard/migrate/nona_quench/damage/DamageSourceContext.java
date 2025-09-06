@@ -11,19 +11,20 @@ import java.util.List;
 import java.util.function.Consumer;
 
 //TODO 元素转映部分
-//载入点：
-public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
+public record DamageSourceContext(boolean actuallyDamage, float overpressureFactor, int cooldownTick, int slowdownTick,
                                   Table<DefenceLayer, ModifyType, Double> damageContent,
                                   List<Consumer<LivingDamageEvent.Pre>> preModifier,
                                   List<Consumer<LivingDamageEvent.Pre>> extraModifier,
                                   List<Consumer<LivingDamageEvent.Post>> feedback) {
-    public DamageSourceContext(boolean actuallyDamage, int cooldownTick,
+    public DamageSourceContext(boolean actuallyDamage, float overpressureFactor, int cooldownTick, int slowdownTick,
                                Table<DefenceLayer, ModifyType, Double> damageContent,
                                List<Consumer<LivingDamageEvent.Pre>> preModifier,
                                List<Consumer<LivingDamageEvent.Pre>> extraModifier,
                                List<Consumer<LivingDamageEvent.Post>> feedback) {
         this.actuallyDamage = actuallyDamage;
+        this.overpressureFactor = org.joml.Math.clamp(0.0f, 1.0f, overpressureFactor);
         this.cooldownTick = Math.max(0, cooldownTick);
+        this.slowdownTick = Math.max(0, slowdownTick);
         this.damageContent =
                 damageContent instanceof ImmutableTable<DefenceLayer, ModifyType, Double> immutable ? immutable : ImmutableTable.copyOf(damageContent);
         this.preModifier = List.copyOf(preModifier);
@@ -47,13 +48,15 @@ public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
     }
 
     public enum ModifyType {
-        PENETRATE,          //穿透，即多少伤害无法被这一层预吸收。
+        PENETRATE,          //穿透，即多少比例的伤害无法被这一层预吸收。
         INJURY              //损伤，即造成的耐久损耗的增加比例。
     }
 
     public static class Builder {
         private int cooldownTick = 9;
         private boolean actuallyDamage;
+        private float overpressureFactor = 0;
+        private int slowdownTick = 0;
         private Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> damageTypeContent;
         private final List<Consumer<LivingDamageEvent.Pre>> preModifier = new ArrayList<>();
         private final List<Consumer<LivingDamageEvent.Pre>> extraModifier = new ArrayList<>();
@@ -74,6 +77,16 @@ public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
 
         public Builder setCooldownTick(int tick) {
             this.cooldownTick = tick;
+            return this;
+        }
+
+        public Builder setSlowdownTick(int tick) {
+            this.slowdownTick = tick;
+            return this;
+        }
+
+        public Builder setOverpressureFactor(float factor) {
+            this.overpressureFactor = factor;
             return this;
         }
 
@@ -132,6 +145,10 @@ public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
             return this;
         }
 
+        public Builder extraMultiply(float value) {
+            return addExtraModifier(pre -> pre.setNewDamage(pre.getNewDamage() * value));
+        }
+
         public Builder addPreModifier(Consumer<LivingDamageEvent.Pre> modifier) {
             this.preModifier.add(modifier);
             return this;
@@ -140,6 +157,10 @@ public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
         public Builder addAllPreModifiers(Collection<Consumer<LivingDamageEvent.Pre>> modifiers) {
             this.preModifier.addAll(modifiers);
             return this;
+        }
+
+        public Builder preMultiply(float value) {
+            return addPreModifier(pre -> pre.setNewDamage(pre.getNewDamage() * value));
         }
 
         public Builder addModifier(Consumer<LivingDamageEvent.Pre> modifier, boolean isPreModifiers) {
@@ -172,8 +193,8 @@ public record DamageSourceContext(boolean actuallyDamage, int cooldownTick,
 
         public DamageSourceContext build() {
             return new DamageSourceContext(
-                    actuallyDamage,
-                    cooldownTick,
+                    actuallyDamage, overpressureFactor,
+                    cooldownTick, slowdownTick,
                     damageTypeContent,
                     preModifier,
                     extraModifier,

@@ -1,7 +1,7 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.meta;
 
 import com.google.common.collect.ImmutableMap;
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipPerk;
+import com.phasetranscrystal.nonard.migrate.nona_quench.perk.IEquipPerk;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public record PerkStrength(int global, Map<IEquipPerk, Integer> extra) {
+    public static final PerkStrength EMPTY = new PerkStrength(0, ImmutableMap.of());
+
     public int getStrength(IEquipPerk perk) {
         return Math.max(extra.getOrDefault(perk, 0) + global, 0);
     }
