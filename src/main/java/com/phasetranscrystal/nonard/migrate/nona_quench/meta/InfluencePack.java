@@ -107,6 +107,20 @@ public final class InfluencePack {
         //Entity AI insert todo
 
         public static final Child EMPTY = new Child(ImmutableMultimap.of(), ImmutableMultimap.of(), ImmutableMultimap.of(), PerkStrength.EMPTY);
+
+        public Child merge(Collection<Child> children){
+            ImmutableMultimap.Builder<Holder<Attribute>, AttributeModifier> attributeModifiers =  ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<Class<? extends Event>, Consumer<? extends Event>> listeners =  ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<ResourceLocation, EquipAttribute.Modifier> modifiers =  ImmutableMultimap.builder();
+            PerkStrength.Mutable mutable = this.perkStrength.toMutable();
+            for(Child child : children){
+                attributeModifiers.putAll(child.attributeModifiers);
+                listeners.putAll(child.listeners);
+                modifiers.putAll(child.modifiers);
+                mutable.add(child.perkStrength);
+            }
+            return new Child(attributeModifiers.build(), listeners.build(), modifiers.build(), mutable.build());
+        }
     }
 
     public static class Builder {

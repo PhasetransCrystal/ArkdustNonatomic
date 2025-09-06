@@ -13,6 +13,7 @@ import org.joml.Math;
 import java.util.*;
 
 public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEquipType<T> {//TODO
+    public final Class<T> itemClass;
     public final int blueprintWidth;    //游戏中该武器组装蓝图的宽度
     public final int blueprintHeight;   //游戏中该武器组装蓝图的高度
     public final int moduleGridWidth;
@@ -22,9 +23,10 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
     public final Map<ResourceLocation, EquipAttribute> attributes;
     public final boolean offhandAllowed;
 
-    public AssembleWeaponType(int blueprintWidth, int blueprintHeight, int moduleGridWidth, int moduleGridHeight,
+    public AssembleWeaponType(Class<T> itemClass, int blueprintWidth, int blueprintHeight, int moduleGridWidth, int moduleGridHeight,
                               Table<Integer, Integer, ResourceLocation> parts, Map<ResourceLocation, PointChain> chains,
                               Map<ResourceLocation, EquipAttribute> attributes, boolean offhandAllowed) {
+        this.itemClass = itemClass;
         this.blueprintWidth = blueprintWidth;
         this.blueprintHeight = blueprintHeight;
         this.moduleGridWidth = moduleGridWidth;
@@ -80,7 +82,8 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
         return null;
     }
 
-    public static class Builder {
+    public static class Builder<T extends Item & IEquipItem<T>> {
+        private final Class<T> basicClass;
         private final int width;    //游戏中该武器组装蓝图的宽度
         private final int height;   //游戏中该武器组装蓝图的高度
         private int moduleGridWidth;
@@ -90,12 +93,13 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
         private final HashMap<ResourceLocation, EquipAttribute> attributes = new HashMap<>();
         private boolean offhandAllowed = false;
 
-        public Builder(int blueprintWidth, int blueprintHeight, int moduleGridWidth, int moduleGridHeight) {
+        public Builder(int blueprintWidth, int blueprintHeight, int moduleGridWidth, int moduleGridHeight, Class<T> basicClass) {
             if (blueprintWidth <= 0 || blueprintHeight <= 0) {
                 throw new IllegalArgumentException("blueprint's width and height must be positive");
             } else if (moduleGridWidth <= 0 || moduleGridHeight <= 0) {
                 throw new IllegalArgumentException("module grid's width and height must be positive");
             }
+            this.basicClass = basicClass;
             this.width = blueprintWidth;
             this.height = blueprintHeight;
             this.moduleGridWidth = moduleGridWidth;
@@ -103,7 +107,7 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
             this.parts = HashBasedTable.create(width, height);
         }
 
-        public Builder addPart(PartType part, ResourceLocation partId, int x, int y) {
+        public Builder<T> addPart(PartType part, ResourceLocation partId, int x, int y) {
             if (chains.containsKey(partId)) {
                 throw new IllegalArgumentException("part id already exist");
             } else if (x < 0 || y < 0 || x >= width || y >= height) {
@@ -118,7 +122,7 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
             return this;
         }
 
-        public Builder addPart(PartType part, ResourceLocation partId, Point... points) {
+        public Builder<T> addPart(PartType part, ResourceLocation partId, Point... points) {
             if (chains.containsKey(partId)) {
                 throw new IllegalArgumentException("part id already exist");
             }
@@ -139,7 +143,7 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
             return this;
         }
 
-        public Builder addWeaponAttribute(ResourceLocation id, double minValue, double maxValue, double defaultValue) {
+        public Builder<T> addWeaponAttribute(ResourceLocation id, double minValue, double maxValue, double defaultValue) {
             if (minValue <= maxValue) {
                 throw new IllegalArgumentException("max value must be greater than min value");
             }
@@ -148,12 +152,12 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
             return this;
         }
 
-        public Builder offhandable() {
+        public Builder<T> offhandable() {
             this.offhandAllowed = true;
             return this;
         }
 
-        public Builder setModuleGridDefaultSize(int x, int y) {
+        public Builder<T> setModuleGridDefaultSize(int x, int y) {
             if (x <= 0 || y <= 0) {
                 throw new IllegalArgumentException("module grid's width and length must be positive");
             }
@@ -162,13 +166,13 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
             return this;
         }
 
-        public Builder offhandAllowed(boolean allowed) {
+        public Builder<T> offhandAllowed(boolean allowed) {
             this.offhandAllowed = allowed;
             return this;
         }
 
-        public AssembleWeaponType build() {
-            return new AssembleWeaponType(this.width, this.height, this.moduleGridWidth, this.moduleGridHeight, parts, chains, attributes, offhandAllowed);
+        public AssembleWeaponType<T> build() {
+            return new AssembleWeaponType<T>(this.basicClass, this.width, this.height, this.moduleGridWidth, this.moduleGridHeight, parts, chains, attributes, offhandAllowed);
         }
     }
 
