@@ -1,14 +1,15 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.core;
 
-import com.google.common.collect.Table;
-import com.phasetranscrystal.nonard.migrate.nona_quench.AssembleWeaponType;
-import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
+import com.google.common.collect.Table;
+import com.phasetranscrystal.nonard.migrate.nona_quench.AssembleWeaponType;
+import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
+
 import java.util.*;
 
-public interface IEquipType<I extends Item & IEquipItem<I>>{//TODO basic equip item
+public interface IEquipType<I extends Item & IEquipItem<I>> {// TODO basic equip item
 
     int blueprintX();
 
@@ -19,7 +20,6 @@ public interface IEquipType<I extends Item & IEquipItem<I>>{//TODO basic equip i
     int moduleGridHeight();
 
     Map<ResourceLocation, EquipAttribute> equipAttributes();
-
 
     Table<Integer, Integer, ResourceLocation> blueprintParts();
 
@@ -35,5 +35,4 @@ public interface IEquipType<I extends Item & IEquipItem<I>>{//TODO basic equip i
     ResourceLocation CHESTPLATE = ResourceLocation.fromNamespaceAndPath("minecraft", "chestplate");
     ResourceLocation LEGGINGS = ResourceLocation.fromNamespaceAndPath("minecraft", "leggings");
     ResourceLocation BOOTS = ResourceLocation.fromNamespaceAndPath("minecraft", "boots");
-
 }

@@ -2,13 +2,12 @@ package com.phasetranscrystal.nonard.opesystem.skill;
 
 import com.mojang.serialization.MapCodec;
 import com.phasetranscrystal.blast.skill.Skill;
-import com.phasetranscrystal.nonard.opesystem.ArknightsOperatorType;
-import com.phasetranscrystal.nonard.opesystem.OperatorEntity;
 import com.phasetranscrystal.nonatomic.core.OperatorInfo;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 public class OperatorSkillData extends OperatorInfo<OperatorSkillData> {
-//    public final OperatorData belonging;
+
+    // public final OperatorData belonging;
     protected int checked;
     protected Object2IntMap<Skill<?>> levelBySkill;
 

@@ -1,14 +1,16 @@
 package com.phasetranscrystal.nonard.opesystem;
 
+import net.minecraft.resources.ResourceLocation;
+
 import com.phasetranscrystal.nonatomic.core.Operator;
 import com.phasetranscrystal.nonatomic.core.OperatorInfo;
 import com.phasetranscrystal.nonatomic.core.OperatorType;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 import java.util.Optional;
 
 public class ArknightsOperator extends Operator {
+
     public ArknightsOperator(OperatorType operatorType) {
         super(operatorType);
     }

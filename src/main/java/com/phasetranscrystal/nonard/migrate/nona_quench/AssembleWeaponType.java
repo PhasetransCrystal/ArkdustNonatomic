@@ -1,21 +1,23 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+
 import com.google.common.collect.*;
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
 import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipFrame;
+import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
 import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipType;
 import com.phasetranscrystal.nonard.migrate.nona_quench.meta.EquipAttribute;
 import com.phasetranscrystal.nonard.migrate.nona_quench.part.PartType;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import org.joml.Math;
 
 import java.util.*;
 
-public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEquipType<T> {//TODO
+public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEquipType<T> {// TODO
+
     public final Class<T> itemClass;
-    public final int blueprintWidth;    //游戏中该武器组装蓝图的宽度
-    public final int blueprintHeight;   //游戏中该武器组装蓝图的高度
+    public final int blueprintWidth;    // 游戏中该武器组装蓝图的宽度
+    public final int blueprintHeight;   // 游戏中该武器组装蓝图的高度
     public final int moduleGridWidth;
     public final int moduleGridHeight;
     public final Table<Integer, Integer, ResourceLocation> parts;
@@ -78,14 +80,15 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
     }
 
     @Override
-    public IEquipFrame<T> getDefaultFrame() {//TODO
+    public IEquipFrame<T> getDefaultFrame() {// TODO
         return null;
     }
 
     public static class Builder<T extends Item & IEquipItem<T>> {
+
         private final Class<T> basicClass;
-        private final int width;    //游戏中该武器组装蓝图的宽度
-        private final int height;   //游戏中该武器组装蓝图的高度
+        private final int width;    // 游戏中该武器组装蓝图的宽度
+        private final int height;   // 游戏中该武器组装蓝图的高度
         private int moduleGridWidth;
         private int moduleGridHeight;
         private final Table<Integer, Integer, ResourceLocation> parts;
@@ -176,9 +179,7 @@ public class AssembleWeaponType<T extends Item & IEquipItem<T>> implements IEqui
         }
     }
 
-    public record Point(int x, int y) {
-    }
+    public record Point(int x, int y) {}
 
-    public record PointChain(PartType type, ResourceLocation partId, Point... points) {
-    }
+    public record PointChain(PartType type, ResourceLocation partId, Point... points) {}
 }

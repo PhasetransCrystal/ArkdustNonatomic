@@ -1,9 +1,10 @@
 package com.phasetranscrystal.nonard.opesystem.info;
 
+import net.minecraft.world.item.ItemStack;
+
 import com.phasetranscrystal.nonard.migrate.ardcore.ExpressionParser;
 import com.phasetranscrystal.nonard.migrate.ardcore.helper.NumberHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.world.item.ItemStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,19 +26,18 @@ public class GeneralOperatorInfo {
     private final int[] eliteMaxLevel;
     private final int maxSkillLevel;
     private final int[] skillLevelRequest;
-    private final Int2ObjectMap<List<ItemStack>> skillUpgradeRequest; //TODO igose
-
+    private final Int2ObjectMap<List<ItemStack>> skillUpgradeRequest; // TODO igose
 
     public GeneralOperatorInfo(String lmbExpression, String expExpression, int maxElite, int[] eliteLevelContent, int maxSkillLevel, int[] skillLevelRequest, Int2ObjectMap<List<ItemStack>> skillUpgradeRequest) {
-//        if((maxElite + 1) != eliteLevelContent.length) {
-//            LOGGER.error("maxElite + 1 not equals eliteLevelContent's length. ArdNona init crashed.");
-//            LOGGER.error("最大精英化阶段+1 与 精英阶段等级容量数组 长度不符。ArdNona初始化错误。");
-//            LOGGER.error("Details: maxElite = {}, eliteLevelContent ");
-//            throw new IllegalArgumentException("maxElite must equals eliteLevelContent's length");
-//        }
-//        if(maxSkillLevel != skillLevelRequest.length) {
-//            throw new IllegalArgumentException("maxSkillLevel must equals skillLevelRequest's length");
-//        }
+        // if((maxElite + 1) != eliteLevelContent.length) {
+        // LOGGER.error("maxElite + 1 not equals eliteLevelContent's length. ArdNona init crashed.");
+        // LOGGER.error("最大精英化阶段+1 与 精英阶段等级容量数组 长度不符。ArdNona初始化错误。");
+        // LOGGER.error("Details: maxElite = {}, eliteLevelContent ");
+        // throw new IllegalArgumentException("maxElite must equals eliteLevelContent's length");
+        // }
+        // if(maxSkillLevel != skillLevelRequest.length) {
+        // throw new IllegalArgumentException("maxSkillLevel must equals skillLevelRequest's length");
+        // }
         this.lmbExpression = lmbExpression;
         this.expExpression = expExpression;
         this.maxElite = maxElite;
@@ -59,7 +59,6 @@ public class GeneralOperatorInfo {
         this.lmbPSum = NumberHelper.createPrefixSumList(lmbRequest);
         this.expPSum = NumberHelper.createPrefixSumList(expRequest);
     }
-
 
     public String getLmbExpression() {
         return lmbExpression;
@@ -97,7 +96,7 @@ public class GeneralOperatorInfo {
         return level >= 1 && level <= getMaxSkillLevel() ? skillUpgradeRequest.get(level - 1).stream().map(ItemStack::copy).toList() : List.of();
     }
 
-    //返回升至本级需要的资源量
+    // 返回升至本级需要的资源量
     public int calculateExp(int level, int elite) {
         return (int) ExpressionParser.evaluate(expExpression, Map.of("level", (double) level, "elite", (double) elite));
     }
@@ -126,12 +125,11 @@ public class GeneralOperatorInfo {
         return expPSum[toLevel - 1] - expPSum[fromLevel - 1];
     }
 
-    public int getEliteForLevel(int level){
-        if(level < 0 || level > getMaxLevel()) return -1;
+    public int getEliteForLevel(int level) {
+        if (level < 0 || level > getMaxLevel()) return -1;
         for (int i = 0; i <= getMaxElite(); i++) {
             if (level <= getEliteMaxLevel(i)) return i;
         }
         return -1;
     }
-
 }

@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public interface Trait {
+
     TraitConfig get();
 
     /**
      * 处理干员的特性效果
+     * 
      * @param operator 要处理的干员
      */
     default void handle(OperatorEntity operator) {
@@ -50,7 +52,8 @@ public interface Trait {
         return true;
     }
 
-     class Context {
+    class Context {
+
         private final OperatorEntity operator;
         private final Trait trait;
         private boolean canceled = false;
@@ -77,4 +80,3 @@ public interface Trait {
         }
     }
 }
-

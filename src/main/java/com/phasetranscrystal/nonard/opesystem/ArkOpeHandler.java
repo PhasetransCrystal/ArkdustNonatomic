@@ -1,5 +1,10 @@
 package com.phasetranscrystal.nonard.opesystem;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.phasetranscrystal.nonard.ArkdustNonatomic;
@@ -11,10 +16,6 @@ import com.phasetranscrystal.nonatomic.core.OpeHandler;
 import com.phasetranscrystal.nonatomic.core.Operator;
 import com.phasetranscrystal.nonatomic.core.OperatorType;
 import com.phasetranscrystal.nonatomic.core.player_opehandler.OpeHandlerNoRepetition;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.UUIDUtil;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Math;
@@ -22,6 +23,7 @@ import org.joml.Math;
 import java.util.*;
 
 public class ArkOpeHandler extends OpeHandlerNoRepetition {
+
     public static final ResourceLocation CONTAINER_ID = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID, "operators");
     public static final Logger LOGGER = LogManager.getLogger("ArkdustNona:OpeHandler");
 
@@ -30,8 +32,7 @@ public class ArkOpeHandler extends OpeHandlerNoRepetition {
             Registries.OPERATOR_TYPE.byNameCodec().listOf().fieldOf("history").forGetter(i -> i.lastDeployingList),
             Helper.mapLikeWithKeyProvider(Operator.CODEC, Operator::getType).fieldOf("operators").forGetter(i -> i.operators),
             UUIDUtil.CODEC.fieldOf("uuid").forGetter(OpeHandlerNoRepetition::ownerUUId),
-            Codec.INT.fieldOf("unlocked_place").forGetter(i -> i.unlockedPlace)
-    ).apply(a, ArkOpeHandler::new));
+            Codec.INT.fieldOf("unlocked_place").forGetter(i -> i.unlockedPlace)).apply(a, ArkOpeHandler::new));
 
     private int unlockedPlace = 2;
 
@@ -85,11 +86,12 @@ public class ArkOpeHandler extends OpeHandlerNoRepetition {
     }
 
     public static class WorldAttach implements OpeHandler.GroupProvider {
+
         public static final Codec<WorldAttach> CODEC = Helper.mapLikeWithKeyProvider(ArkOpeHandler.CODEC, OpeHandlerNoRepetition::ownerUUId).xmap(WorldAttach::new, i -> i.data);
 
         private final Map<UUID, ArkOpeHandler> data;
 
-        public WorldAttach(){
+        public WorldAttach() {
             this.data = new HashMap<>();
         }
 

@@ -1,0 +1,21 @@
+dependencies {
+    compileOnly("org.projectlombok:lombok:1.18.32")
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
+
+    implementation 'com.github.PhasetransCrystal:BreaNonatomic:master-SNAPSHOT'
+
+    implementation 'com.github.PhasetransCrystal:BreaHoriz:main-SNAPSHOT'
+
+    implementation 'com.github.PhasetransCrystal:BreaBlast:55f2caab27'
+
+    implementation "curse.maven:modern-ui-${modernui_path}"
+
+//    implementation "curse.maven:geckolib-${geolib_path}"
+
+    // Modern UI core framework
+    implementation "icyllis.modernui:ModernUI-Core:${modernui_version}"
+    // Modern UI core extensions
+    implementation "icyllis.modernui:ModernUI-Markdown:${modernui_version}"
+
+    implementation "io.github.tt432:eyelib:21.1.1"
+}

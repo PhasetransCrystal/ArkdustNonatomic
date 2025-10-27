@@ -1,11 +1,5 @@
 package com.phasetranscrystal.nonard.testobjs;
 
-import com.mojang.serialization.Codec;
-import com.phasetranscrystal.blast.Registries;
-import com.phasetranscrystal.blast.skill.Skill;
-import com.phasetranscrystal.blast.skill.SkillData;
-import com.phasetranscrystal.nonard.ArkdustNonatomic;
-import io.github.tt432.eyelib.network.SpawnParticlePacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -34,6 +28,13 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+import com.mojang.serialization.Codec;
+import com.phasetranscrystal.blast.Registries;
+import com.phasetranscrystal.blast.skill.Skill;
+import com.phasetranscrystal.blast.skill.SkillData;
+import com.phasetranscrystal.nonard.ArkdustNonatomic;
+import io.github.tt432.eyelib.network.SpawnParticlePacket;
+
 public class SkillTest {
 
     public static void bootstrap(IEventBus bus) {
@@ -49,7 +50,7 @@ public class SkillTest {
     public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> TEST_SKILL = SKILL.register("test",
             () -> Skill.Builder.<ServerPlayer>of(30, "simp")
                     .start(data -> data.getEntity().displayClientMessage(Component.literal("TestSkillInit"), false))
-//                    .flag(Skill.Flag.INSTANT_COMPLETE, true)
+                    // .flag(Skill.Flag.INSTANT_COMPLETE, true)
                     .onEvent(EntityTickEvent.Post.class, (event, data) -> {
                         ServerPlayer player = data.getEntity();
                         if (player.serverLevel().getGameTime() % 100 == 0 && player.getHealth() < player.getMaxHealth()) {
@@ -58,33 +59,32 @@ public class SkillTest {
                         }
                     })
                     .addBehavior(50, 5, "simp", builder -> builder
-                                    //按键监听测试
-//                                  .setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) -> {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
-                                    .onHurt((event, data) -> data.addEnergy(-1))
-                                    .onAttack((event, data) -> data.addEnergy(2))
-                                    .onKillTarget((event, data) -> data.addEnergy(5))
-                                    .energyChanged((data, i) -> {
-                                        data.getEntity().displayClientMessage(Component.literal("Energy " + (i >= 0 ? "§a+" : "§c-") + i), true);
-                                    })
-                                    .chargeChanged((data, i) -> {
-                                        data.getEntity().displayClientMessage(Component.literal("Charge " + (i >= 0 ? "§a+" : "§c-") + i), true);
-                                        ResourceLocation location = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID, "skill_test");
-                                        data.addAutoCleanAttribute(new AttributeModifier(location, 0.5 * data.getCharge(), AttributeModifier.Operation.ADD_VALUE), Attributes.MOVEMENT_SPEED);
-                                    })
-                                    .onChargeReady(data -> data.getEntity().displayClientMessage(Component.literal("ReachReady!"), false))
-                                    .onChargeFull(data -> data.getEntity().displayClientMessage(Component.literal("ReachStop!"), false))
-                                    .endWith(data -> {
-                                        data.putCacheData("charge_consume", data.getCharge() + 1 + "", true, true);
-                                        data.setCharge(0);
-                                    })
-                    )
+                            // 按键监听测试
+                            // .setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) ->
+                            // {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
+                            .onHurt((event, data) -> data.addEnergy(-1))
+                            .onAttack((event, data) -> data.addEnergy(2))
+                            .onKillTarget((event, data) -> data.addEnergy(5))
+                            .energyChanged((data, i) -> {
+                                data.getEntity().displayClientMessage(Component.literal("Energy " + (i >= 0 ? "§a+" : "§c-") + i), true);
+                            })
+                            .chargeChanged((data, i) -> {
+                                data.getEntity().displayClientMessage(Component.literal("Charge " + (i >= 0 ? "§a+" : "§c-") + i), true);
+                                ResourceLocation location = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID, "skill_test");
+                                data.addAutoCleanAttribute(new AttributeModifier(location, 0.5 * data.getCharge(), AttributeModifier.Operation.ADD_VALUE), Attributes.MOVEMENT_SPEED);
+                            })
+                            .onChargeReady(data -> data.getEntity().displayClientMessage(Component.literal("ReachReady!"), false))
+                            .onChargeFull(data -> data.getEntity().displayClientMessage(Component.literal("ReachStop!"), false))
+                            .endWith(data -> {
+                                data.putCacheData("charge_consume", data.getCharge() + 1 + "", true, true);
+                                data.setCharge(0);
+                            }))
                     .judge((data, name) -> !"active".equals(name) || (data.getEntity().level().isNight() && data.getCharge() >= 1))
                     .addBehavior("active", builder -> builder
                             .setMaxStageEnergy(10)
                             .startWith(data -> PacketDistributor.sendToPlayersTrackingChunk(
                                     (ServerLevel) data.getEntity().level(), new ChunkPos(data.getEntity().blockPosition()),
-                                    new SpawnParticlePacket("baozi", ParticlesTest.LARGE_SPORE_RING_SPRAY, data.getEntity().getPosition(0).toVector3f())
-                            ))
+                                    new SpawnParticlePacket("baozi", ParticlesTest.LARGE_SPORE_RING_SPRAY, data.getEntity().getPosition(0).toVector3f())))
                             .onTick((event, data) -> {
                                 data.getEntity().displayClientMessage(Component.literal("activeTick"), true);
                                 data.addEnergy(-1);
@@ -94,8 +94,7 @@ public class SkillTest {
                                 data.getEntity().jumpFromGround();
                                 data.getEntity().addDeltaMovement(new Vec3(0, 0.1, 0));
                                 data.getEntity().addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200 * data.getCacheDataAsInt("charge_consume", 0, true), 2));
-                            })
-                    )
+                            }))
                     .onBehaviorChange((data, behavior) -> {
                         if (data.getActiveTimes() == 5) data.requestDisable();
                         else {
@@ -104,30 +103,28 @@ public class SkillTest {
                         }
                     })
                     .onEnd(data -> data.getEntity().displayClientMessage(Component.literal("skill disabled"), false))
-                    .build(ServerPlayer.class)
-    );
+                    .build(ServerPlayer.class));
 
-//    public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> OLD_MA = SKILL.register("old_ma", () -> {
-//        return Skill.Builder
-//                .<ServerPlayer>of(50, 3, 0, 0, 50)
-//                .start(data -> data.getEntity().displayClientMessage(Component.literal("OldMaInit"), false))
-//                .judge((data, name) -> data.getCharge() == 3)
-//                .addBehavior(builder -> {
-//                    builder.setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) -> {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
-//                            .endWith(data -> data.getEntity().displayClientMessage(Component.literal("OldMaEnd"), false));
-//                }, "key test")
-//                .end();
-//    });
+    // public static final DeferredHolder<Skill<?>, Skill<ServerPlayer>> OLD_MA = SKILL.register("old_ma", () -> {
+    // return Skill.Builder
+    // .<ServerPlayer>of(50, 3, 0, 0, 50)
+    // .start(data -> data.getEntity().displayClientMessage(Component.literal("OldMaInit"), false))
+    // .judge((data, name) -> data.getCharge() == 3)
+    // .addBehavior(builder -> {
+    // builder.setKeyInputListener(new int[]{GLFW.GLFW_KEY_H}, (event, data) ->
+    // {data.getEntity().sendSystemMessage(Component.literal("按键拦截成功"));})
+    // .endWith(data -> data.getEntity().displayClientMessage(Component.literal("OldMaEnd"), false));
+    // }, "key test")
+    // .end();
+    // });
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ArkdustNonatomic.MODID);
 
-    public static final DeferredHolder<AttachmentType<?>, AttachmentType<SkillData<ServerPlayer>>> SKILL_ATTACHMENT =
-            ATTACHMENT.register("skill", () -> AttachmentType.builder(() -> new SkillData<>(TEST_SKILL.get())).serialize((Codec) SkillData.CODEC).copyOnDeath().build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<SkillData<ServerPlayer>>> SKILL_ATTACHMENT = ATTACHMENT.register("skill", () -> AttachmentType.builder(() -> new SkillData<>(TEST_SKILL.get())).serialize((Codec) SkillData.CODEC).copyOnDeath().build());
 
     public static final DeferredRegister<Item> ITEM = DeferredRegister.create(net.minecraft.core.registries.Registries.ITEM, ArkdustNonatomic.MODID);
 
     public static final DeferredHolder<Item, Start> START = ITEM.register("skill_start", Start::new);
-
 
     public static void onDeath(LivingDeathEvent event) {
         event.getEntity().getExistingData(SKILL_ATTACHMENT).ifPresent(SkillData::requestDisable);
@@ -140,6 +137,7 @@ public class SkillTest {
     }
 
     public static class Start extends Item {
+
         public Start() {
             super(new Properties());
         }

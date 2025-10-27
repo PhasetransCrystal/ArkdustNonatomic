@@ -1,7 +1,5 @@
 package com.phasetranscrystal.nonard.opesystem;
 
-import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
-import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -9,8 +7,12 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 
+import com.phasetranscrystal.nonard.registry.AttributeTypeRegistry;
+import it.unimi.dsi.fastutil.doubles.Double2DoubleFunction;
+
 public class OperatorBaseAttributes {
-    public static final Holder<Attribute>[] ATTRIBUTES = new Holder[]{Attributes.MAX_HEALTH, Attributes.ATTACK_DAMAGE, Attributes.ATTACK_SPEED, Attributes.ARMOR, AttributeTypeRegistry.MAGIC_RESISTANCE};
+
+    public static final Holder<Attribute>[] ATTRIBUTES = new Holder[] { Attributes.MAX_HEALTH, Attributes.ATTACK_DAMAGE, Attributes.ATTACK_SPEED, Attributes.ARMOR, AttributeTypeRegistry.MAGIC_RESISTANCE };
 
     public final double[] values;
 
@@ -19,7 +21,7 @@ public class OperatorBaseAttributes {
     }
 
     public OperatorBaseAttributes(double health, double damage, double attackSpeed, double armor, double magicResistance) {
-        this.values = new double[]{health, damage, attackSpeed, armor, magicResistance};
+        this.values = new double[] { health, damage, attackSpeed, armor, magicResistance };
     }
 
     public double getMagicResistance() {
@@ -51,6 +53,7 @@ public class OperatorBaseAttributes {
     }
 
     public static class Builder {
+
         private double health;
         private double damage;
         private double attackSpeed;
@@ -67,8 +70,7 @@ public class OperatorBaseAttributes {
                     existingAttributes.getDamage(),
                     existingAttributes.getAttackSpeed(),
                     existingAttributes.getArmor(),
-                    existingAttributes.getMagicResistance()
-            );
+                    existingAttributes.getMagicResistance());
         }
 
         public Builder(double health, double damage, double attackSpeed, double armor, double magicResistance) {
@@ -134,5 +136,4 @@ public class OperatorBaseAttributes {
             return new OperatorBaseAttributes(health, damage, attackSpeed, armor, magicResistance);
         }
     }
-
 }

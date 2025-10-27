@@ -6,28 +6,31 @@ import net.minecraft.world.entity.ai.goal.GoalSelector;
 import java.util.List;
 
 public interface GoalContainer {
+
     boolean goalImmutable();
 
     List<INamedGoal> getNormalGoals();
+
     List<INamedGoal> getTargetGoals();
 
     GoalSelector getNormalGoalSelector();
+
     GoalSelector getTargetGoalSelector();
 
-    default void addNormalGoal(INamedGoal goal){
-        if(goalImmutable()) return;
+    default void addNormalGoal(INamedGoal goal) {
+        if (goalImmutable()) return;
         this.getNormalGoals().add(goal);
         this.getNormalGoalSelector().addGoal(goal.priority(), goal.goal());
     };
 
-    default void addTargetGoal(INamedGoal goal){
-        if(goalImmutable()) return;
+    default void addTargetGoal(INamedGoal goal) {
+        if (goalImmutable()) return;
         this.getTargetGoals().add(goal);
         this.getTargetGoalSelector().addGoal(goal.priority(), goal.goal());
     };
 
-    default void removeNormalGoal(ResourceLocation goal){
-        if(goalImmutable()) return;
+    default void removeNormalGoal(ResourceLocation goal) {
+        if (goalImmutable()) return;
         for (INamedGoal t : this.getNormalGoals()) {
             if (t.test(goal)) {
                 this.getNormalGoals().remove(t);
@@ -36,8 +39,8 @@ public interface GoalContainer {
         }
     };
 
-    default void removeTargetGoal(ResourceLocation goal){
-        if(goalImmutable()) return;
+    default void removeTargetGoal(ResourceLocation goal) {
+        if (goalImmutable()) return;
 
         for (INamedGoal t : this.getTargetGoals()) {
             if (t.test(goal)) {

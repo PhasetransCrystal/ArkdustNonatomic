@@ -1,5 +1,8 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.perk;
 
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.Item;
+
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -10,8 +13,6 @@ import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipFrame;
 import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
 import com.phasetranscrystal.nonard.migrate.nona_quench.helper.WeightedRandomSelector;
 import com.phasetranscrystal.nonard.migrate.nona_quench.registry.BreaQuenchRegistries;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.Item;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -21,20 +22,20 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public record PerkPool(List<Column> list) {
+
     public static final Logger LOGGER = LogManager.getLogger("BreaQuench:Perk:PerkPool");
     public static final Supplier<List<IEquipPerk>> EMPTY_PERK_LIST = Suppliers.memoize(() -> ImmutableList.of(BreaQuenchRegistries.DEFAULT.get()));
     public static final Codec<PerkPool> CODEC = Column.CODEC.listOf().xmap(PerkPool::new, PerkPool::list);
 
     public record Column(ImmutableMap<IEquipPerk, Integer> perkList) {
-        public static final Codec<Column> CODEC =
-                Codec.mapPair(NewRegistries.PERKS.byNameCodec().fieldOf("perk"), Codec.INT.fieldOf("weight"))
-                        .codec().listOf()
-                        .xmap(list -> {
-                            ImmutableMap.Builder<IEquipPerk, Integer> builder = ImmutableMap.builder();
-                            list.forEach(p -> builder.put(p.getFirst(), p.getSecond()));
-                            return new Column(builder.build());
-                        }, column -> column.perkList.entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue())).toList());
 
+        public static final Codec<Column> CODEC = Codec.mapPair(NewRegistries.PERKS.byNameCodec().fieldOf("perk"), Codec.INT.fieldOf("weight"))
+                .codec().listOf()
+                .xmap(list -> {
+                    ImmutableMap.Builder<IEquipPerk, Integer> builder = ImmutableMap.builder();
+                    list.forEach(p -> builder.put(p.getFirst(), p.getSecond()));
+                    return new Column(builder.build());
+                }, column -> column.perkList.entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue())).toList());
 
         public <T extends Item & IEquipItem<T>> Column filter(IEquipFrame<T> frame, @Nullable IEquipItem<T> item, boolean logging) {
             ImmutableMap.Builder<IEquipPerk, Integer> builder = ImmutableMap.builder();
@@ -71,6 +72,4 @@ public record PerkPool(List<Column> list) {
         }
         return perks;
     }
-
-
 }

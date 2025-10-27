@@ -8,9 +8,7 @@ import net.neoforged.neoforge.registries.NewRegistryEvent;
 public class ModBusEventConsumer {
 
     @SubscribeEvent
-    public static void newRegistryEvent(NewRegistryEvent event){
+    public static void newRegistryEvent(NewRegistryEvent event) {
         event.register(NewRegistries.PERKS);
     }
-
-
 }

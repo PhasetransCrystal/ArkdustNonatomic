@@ -3,16 +3,14 @@ package com.phasetranscrystal.nonard.opesystem.skill;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.phasetranscrystal.blast.skill.Skill;
 import com.phasetranscrystal.nonard.opesystem.ArknightsOperatorType;
 import com.phasetranscrystal.nonard.opesystem.OperatorEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
-
 public class OperatorSkillGroup<E extends OperatorEntity> {
+
     public static final Logger LOGGER = LogManager.getLogger("ArkdustNona:OpeSkill:SkillGroup");
     public final int defaultChoose;
     public final ArknightsOperatorType<E> type;
@@ -37,7 +35,7 @@ public class OperatorSkillGroup<E extends OperatorEntity> {
         this.skills = skills;
         ImmutableBiMap.Builder<Skill<E>, OperatorSkill<E>> builder = ImmutableBiMap.builder();
         for (OperatorSkill<E> skill : skills) {
-            builder.put(skill.skill,skill);
+            builder.put(skill.skill, skill);
         }
         this.skillMap = builder.build();
     }

@@ -3,9 +3,9 @@ package com.phasetranscrystal.nonard.migrate.nona_quench.helper;
 import net.minecraft.util.RandomSource;
 
 import java.util.*;
-import java.util.function.Supplier;
 
 public class WeightedRandomSelector {
+
     /**
      * 从带权重的元素Map中随机顺序取出指定数量的元素
      *
@@ -69,6 +69,7 @@ public class WeightedRandomSelector {
 
     // 内部类：带权重的元素
     private static class WeightedItem<T> {
+
         private final T item;
         private final int weight;
 

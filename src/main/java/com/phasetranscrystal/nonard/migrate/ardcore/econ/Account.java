@@ -1,32 +1,28 @@
 package com.phasetranscrystal.nonard.migrate.ardcore.econ;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.phasetranscrystal.nonard.ArkdustNonatomic;
-import com.phasetranscrystal.nonard.migrate.ardcore.ArkdustCore;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.capabilities.ItemCapability;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.phasetranscrystal.nonard.migrate.ardcore.ArkdustCore;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
 public class Account {
+
     public static final Codec<Account> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.LONG.fieldOf("lmb").forGetter(Account::getLmb),
             Codec.LONG.fieldOf("originitePrime").forGetter(Account::getOriginitePrime),
             Codec.LONG.fieldOf("originiumIngot").forGetter(Account::getOriginiumIngot),
-            Codec.LONG.fieldOf("orundum").forGetter(Account::getOrundum)
-    ).apply(i, Account::new));
+            Codec.LONG.fieldOf("orundum").forGetter(Account::getOrundum)).apply(i, Account::new));
 
     private long lmb;
     private long originitePrime;
@@ -60,7 +56,7 @@ public class Account {
     }
 
     public long extractLmb(long lmb) {
-        if(this.lmb >= lmb){
+        if (this.lmb >= lmb) {
             this.lmb -= lmb;
         } else {
             lmb = this.lmb;
@@ -82,7 +78,7 @@ public class Account {
     }
 
     public long extractOriginitePrime(long originitePrime) {
-        if(this.originitePrime >= originitePrime){
+        if (this.originitePrime >= originitePrime) {
             this.originitePrime -= originitePrime;
         } else {
             originitePrime = this.originitePrime;
@@ -104,7 +100,7 @@ public class Account {
     }
 
     public long extractOriginiumIngot(long originiumIngot) {
-        if(this.originiumIngot >= originiumIngot){
+        if (this.originiumIngot >= originiumIngot) {
             this.originiumIngot -= originiumIngot;
         } else {
             originiumIngot = this.originiumIngot;
@@ -126,7 +122,7 @@ public class Account {
     }
 
     public long extractOrundum(long orundum) {
-        if(this.orundum >= orundum){
+        if (this.orundum >= orundum) {
             this.orundum -= orundum;
         } else {
             orundum = this.orundum;
@@ -164,54 +160,56 @@ public class Account {
         long cache;
 
         cache = extractLmb(requirement.lmb);
-        if(cache != requirement.lmb){
+        if (cache != requirement.lmb) {
             fallback.setLmb(requirement.lmb - cache);
             flag = true;
         }
 
         cache = extractOriginitePrime(requirement.originitePrime);
-        if(cache != requirement.originitePrime){
+        if (cache != requirement.originitePrime) {
             fallback.setOriginitePrime(requirement.originitePrime - cache);
             flag = true;
         }
 
         cache = extractOriginiumIngot(requirement.originiumIngot);
-        if(cache != requirement.originiumIngot){
+        if (cache != requirement.originiumIngot) {
             fallback.setOriginiumIngot(requirement.originiumIngot - cache);
             flag = true;
         }
 
         cache = extractOrundum(requirement.orundum);
-        if(cache != requirement.orundum){
+        if (cache != requirement.orundum) {
             fallback.setOrundum(requirement.orundum - cache);
             flag = true;
         }
 
-        if(flag){
+        if (flag) {
             return Optional.of(fallback);
         }
         return Optional.empty();
     }
 
     public static class Capability {
+
         public static final BlockCapability<Account, @Nullable Direction> BLOCK = BlockCapability.createSided(ArkdustCore.location("account"), Account.class);
         public static final EntityCapability<Account, @Nullable Direction> ENTITY = EntityCapability.createSided(ArkdustCore.location("account"), Account.class);
         public static final ItemCapability<Account, @Nullable Void> ITEM = ItemCapability.createVoid(ArkdustCore.location("account"), Account.class);
     }
 
     public static class DataAttachment {
+
         public static final DeferredRegister<AttachmentType<?>> REGISTER = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ArkdustCore.MODID);
         public static final DeferredHolder<AttachmentType<?>, AttachmentType<Account>> ATTACHMENT = REGISTER.register("account", () -> AttachmentType.builder(Account::new).serialize(CODEC).copyOnDeath().build());
     }
 
     public static class Requirement {
+
         private long lmb;
         private long originitePrime;
         private long originiumIngot;
         private long orundum;
 
-        public Requirement() {
-        }
+        public Requirement() {}
 
         public Requirement(long lmb, long originitePrime, long originiumIngot, long orundum) {
             this.lmb = lmb;
@@ -256,7 +254,7 @@ public class Account {
             return orundum;
         }
 
-        public Requirement copy(){
+        public Requirement copy() {
             return new Requirement(this.lmb, this.originitePrime, this.originiumIngot, this.orundum);
         }
 
@@ -264,13 +262,13 @@ public class Account {
             return this.lmb == 0 && this.originitePrime == 0 && this.originiumIngot == 0 && this.orundum == 0;
         }
 
-        public Immut immutable(){
+        public Immut immutable() {
             return new Immut(this.lmb, this.originitePrime, this.originiumIngot, this.orundum);
         }
 
         public static class Immut extends Requirement {
-            public Immut() {
-            }
+
+            public Immut() {}
 
             public Immut(long lmb, long originitePrime, long originiumIngot, long orundum) {
                 super(lmb, originitePrime, originiumIngot, orundum);
@@ -301,5 +299,4 @@ public class Account {
             }
         }
     }
-
 }
