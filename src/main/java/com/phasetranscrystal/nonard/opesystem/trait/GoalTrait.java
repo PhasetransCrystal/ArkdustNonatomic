@@ -3,7 +3,7 @@ package com.phasetranscrystal.nonard.opesystem.trait;
 import com.phasetranscrystal.nonard.opesystem.OperatorEntity;
 import com.phasetranscrystal.nonard.opesystem.ai.INamedGoal;
 
-public record GoalTrait(TraitConfig config , INamedGoal goal, boolean isTarget) implements Trait {
+public record GoalTrait(TraitConfig config, INamedGoal goal, boolean isTarget) implements Trait {
 
     @Override
     public TraitConfig get() {
@@ -12,7 +12,7 @@ public record GoalTrait(TraitConfig config , INamedGoal goal, boolean isTarget) 
 
     @Override
     public void doHandle(OperatorEntity operator, Context context) {
-        if(isTarget) {
+        if (isTarget) {
             operator.addTargetGoal(goal);
         } else {
             operator.addNormalGoal(goal);

@@ -1,9 +1,5 @@
 package com.phasetranscrystal.nonard.testobjs;
 
-import com.phasetranscrystal.nonard.ArkdustNonatomic;
-import io.github.tt432.eyelib.client.loader.BrParticleLoader;
-import io.github.tt432.eyelib.client.particle.bedrock.BrParticleEmitter;
-import io.github.tt432.eyelib.client.particle.bedrock.BrParticleManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -12,18 +8,25 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public class ParticlesTest {
-    public static final ResourceLocation LARGE_SPORE_RING_SPRAY = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID,"large_spore_ring_spray");
+import com.phasetranscrystal.nonard.ArkdustNonatomic;
+import io.github.tt432.eyelib.client.loader.BrParticleLoader;
+import io.github.tt432.eyelib.client.particle.bedrock.BrParticleEmitter;
+import io.github.tt432.eyelib.client.particle.bedrock.BrParticleManager;
 
-    public static class Emitter extends Item{
+public class ParticlesTest {
+
+    public static final ResourceLocation LARGE_SPORE_RING_SPRAY = ResourceLocation.fromNamespaceAndPath(ArkdustNonatomic.MODID, "large_spore_ring_spray");
+
+    public static class Emitter extends Item {
+
         public Emitter() {
             super(new Properties());
         }
 
         @Override
         public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
-            if(level.isClientSide()) {
-                BrParticleManager.spawnEmitter("baozi", new BrParticleEmitter(BrParticleLoader.getParticle(LARGE_SPORE_RING_SPRAY),null,level, player.getPosition(0).toVector3f()));
+            if (level.isClientSide()) {
+                BrParticleManager.spawnEmitter("baozi", new BrParticleEmitter(BrParticleLoader.getParticle(LARGE_SPORE_RING_SPRAY), null, level, player.getPosition(0).toVector3f()));
             }
             return super.use(level, player, usedHand);
         }

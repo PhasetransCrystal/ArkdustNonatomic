@@ -1,10 +1,5 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.meta;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Multimap;
-import com.phasetranscrystal.horiz.EntityEventDistribute;
-import com.phasetranscrystal.horiz.Horiz;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,15 +8,20 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.Event;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.phasetranscrystal.horiz.EntityEventDistribute;
+import com.phasetranscrystal.horiz.Horiz;
+
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public final class InfluencePack {
 
     public static final ResourceLocation ROOT = ResourceLocation.fromNamespaceAndPath("nona_quench", "equipments");
     public final ResourceLocation root;
-    //先都private 需要的时候再打洞
+    // 先都private 需要的时候再打洞
     public final PerkStrength perkStrength;
     private final ResourceLocation[] path;
     private final Map<Holder<Attribute>, TriNum> attribute;
@@ -40,10 +40,9 @@ public final class InfluencePack {
         this.equipAttribute = equipAttribute;
         this.listeners = listeners;
     }
-    //  brea:quench / slotFlag / path
+    // brea:quench / slotFlag / path
 
     public void binding(LivingEntity entity) {
-
         attribute.forEach((atr, tri) -> {
             Optional.ofNullable(entity.getAttribute(atr)).ifPresent(ins -> {
                 if (tri.get1() != 0)
@@ -65,7 +64,7 @@ public final class InfluencePack {
     }
 
     public boolean binding(ItemStack stack) {
-        EquipAttribute.Manager manager = null; //TODO
+        EquipAttribute.Manager manager = null; // TODO
         if (!manager.inited()) return false;
         equipAttribute.forEach((atr, tri) -> {
             if (tri.get1() != 0)
@@ -89,7 +88,7 @@ public final class InfluencePack {
     }
 
     public boolean debing(ItemStack stack) {
-        EquipAttribute.Manager manager = null; //TODO
+        EquipAttribute.Manager manager = null; // TODO
         if (!manager.inited()) return false;
         equipAttribute.keySet().forEach(atr -> {
             manager.removeModifier(atr, root.withSuffix("stage1"));
@@ -103,17 +102,17 @@ public final class InfluencePack {
                         Multimap<Class<? extends Event>, Consumer<? extends Event>> listeners,
                         Multimap<ResourceLocation, EquipAttribute.Modifier> modifiers,
                         PerkStrength perkStrength) {
-        //Render attach todo
-        //Entity AI insert todo
+        // Render attach todo
+        // Entity AI insert todo
 
         public static final Child EMPTY = new Child(ImmutableMultimap.of(), ImmutableMultimap.of(), ImmutableMultimap.of(), PerkStrength.EMPTY);
 
-        public Child merge(Collection<Child> children){
-            ImmutableMultimap.Builder<Holder<Attribute>, AttributeModifier> attributeModifiers =  ImmutableMultimap.builder();
-            ImmutableMultimap.Builder<Class<? extends Event>, Consumer<? extends Event>> listeners =  ImmutableMultimap.builder();
-            ImmutableMultimap.Builder<ResourceLocation, EquipAttribute.Modifier> modifiers =  ImmutableMultimap.builder();
+        public Child merge(Collection<Child> children) {
+            ImmutableMultimap.Builder<Holder<Attribute>, AttributeModifier> attributeModifiers = ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<Class<? extends Event>, Consumer<? extends Event>> listeners = ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<ResourceLocation, EquipAttribute.Modifier> modifiers = ImmutableMultimap.builder();
             PerkStrength.Mutable mutable = this.perkStrength.toMutable();
-            for(Child child : children){
+            for (Child child : children) {
                 attributeModifiers.putAll(child.attributeModifiers);
                 listeners.putAll(child.listeners);
                 modifiers.putAll(child.modifiers);
@@ -124,6 +123,7 @@ public final class InfluencePack {
     }
 
     public static class Builder {
+
         public final List<ResourceLocation> path;
         private List<Child> children = new ArrayList<>();
 
@@ -189,6 +189,7 @@ public final class InfluencePack {
     }
 
     private static class TriNum {
+
         public double v1 = 0, v2 = 0, v3 = 1;
 
         public void add1(double value) {
@@ -263,5 +264,4 @@ public final class InfluencePack {
                 "equipAttribute=" + equipAttribute + ", " +
                 "listeners=" + listeners + ']';
     }
-
 }

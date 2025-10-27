@@ -1,21 +1,23 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.damage;
 
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-//TODO 元素转映部分
+// TODO 元素转映部分
 public record DamageSourceContext(boolean actuallyDamage, float overpressureFactor, int cooldownTick, int slowdownTick,
                                   Table<DefenceLayer, ModifyType, Double> damageContent,
                                   List<Consumer<LivingDamageEvent.Pre>> preModifier,
                                   List<Consumer<LivingDamageEvent.Pre>> extraModifier,
                                   List<Consumer<LivingDamageEvent.Post>> feedback) {
+
     public DamageSourceContext(boolean actuallyDamage, float overpressureFactor, int cooldownTick, int slowdownTick,
                                Table<DefenceLayer, ModifyType, Double> damageContent,
                                List<Consumer<LivingDamageEvent.Pre>> preModifier,
@@ -25,20 +27,19 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
         this.overpressureFactor = org.joml.Math.clamp(0.0f, 1.0f, overpressureFactor);
         this.cooldownTick = Math.max(0, cooldownTick);
         this.slowdownTick = Math.max(0, slowdownTick);
-        this.damageContent =
-                damageContent instanceof ImmutableTable<DefenceLayer, ModifyType, Double> immutable ? immutable : ImmutableTable.copyOf(damageContent);
+        this.damageContent = damageContent instanceof ImmutableTable<DefenceLayer, ModifyType, Double> immutable ? immutable : ImmutableTable.copyOf(damageContent);
         this.preModifier = List.copyOf(preModifier);
         this.extraModifier = List.copyOf(extraModifier);
         this.feedback = List.copyOf(feedback);
     }
 
-
     public enum DefenceLayer {
-        STANDARD_DEFENCE(false),    //标准防御，伤害数值减量。
-        SPELL_DEFENCE(true),        //法术防御层
-        HARD_DEFENCE(true),         //硬防层
-        SOFT_DEFENCE(true),         //软防层
-        RESILIENCE_DEFENCE(false);  //韧性防御，伤害比例减免
+
+        STANDARD_DEFENCE(false),    // 标准防御，伤害数值减量。
+        SPELL_DEFENCE(true),        // 法术防御层
+        HARD_DEFENCE(true),         // 硬防层
+        SOFT_DEFENCE(true),         // 软防层
+        RESILIENCE_DEFENCE(false);  // 韧性防御，伤害比例减免
 
         public final boolean percentCalculate;
 
@@ -48,11 +49,12 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
     }
 
     public enum ModifyType {
-        PENETRATE,          //穿透，即多少比例的伤害无法被这一层预吸收。
-        INJURY              //损伤，即造成的耐久损耗的增加比例。
+        PENETRATE,          // 穿透，即多少比例的伤害无法被这一层预吸收。
+        INJURY              // 损伤，即造成的耐久损耗的增加比例。
     }
 
     public static class Builder {
+
         private int cooldownTick = 9;
         private boolean actuallyDamage;
         private float overpressureFactor = 0;
@@ -102,9 +104,9 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
 
         // 添加单个内容项
         public Builder addDamageTypeContent(
-                DamageSourceContext.DefenceLayer layer,
-                DamageSourceContext.ModifyType type,
-                double value) {
+                                            DamageSourceContext.DefenceLayer layer,
+                                            DamageSourceContext.ModifyType type,
+                                            double value) {
             if (!contentLocked) {
                 this.damageTypeContent.put(layer, type, value);
             }
@@ -113,7 +115,7 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
 
         // 添加多个内容项
         public Builder addAllDamageTypeContent(
-                Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
+                                               Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
             if (!contentLocked) {
                 this.damageTypeContent.putAll(content);
             }
@@ -122,7 +124,7 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
 
         // 替换整个内容并锁定（使用ImmutableTable）
         public Builder setImmutableDamageTypeContent(
-                ImmutableTable<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
+                                                     ImmutableTable<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
             this.damageTypeContent = content;
             this.contentLocked = true; // 设置后锁定
             return this;
@@ -130,7 +132,7 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
 
         // 复制现有内容并允许修改
         public Builder copyDamageTypeContent(
-                Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
+                                             Table<DamageSourceContext.DefenceLayer, DamageSourceContext.ModifyType, Double> content) {
             this.damageTypeContent = HashBasedTable.create(content);
             return this;
         }
@@ -198,8 +200,7 @@ public record DamageSourceContext(boolean actuallyDamage, float overpressureFact
                     damageTypeContent,
                     preModifier,
                     extraModifier,
-                    feedback
-            );
+                    feedback);
         }
     }
 }

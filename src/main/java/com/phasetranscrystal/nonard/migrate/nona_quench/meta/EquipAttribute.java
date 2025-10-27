@@ -1,31 +1,33 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.meta;
 
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.phasetranscrystal.nonard.migrate.nona_quench.AssembleWeaponType;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.StringRepresentable;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Math;
 
 import java.util.*;
 
 public record EquipAttribute(ResourceLocation id, double minValue, double maxValue, double basicValue) {
+
     public static final Codec<EquipAttribute> CODEC = RecordCodecBuilder.create(i -> i.group(
             ResourceLocation.CODEC.fieldOf("id").forGetter(EquipAttribute::id),
             Codec.DOUBLE.fieldOf("min").forGetter(EquipAttribute::minValue),
             Codec.DOUBLE.fieldOf("max").forGetter(EquipAttribute::maxValue),
-            Codec.DOUBLE.fieldOf("basic").forGetter(EquipAttribute::basicValue)
-    ).apply(i, EquipAttribute::new));
+            Codec.DOUBLE.fieldOf("basic").forGetter(EquipAttribute::basicValue)).apply(i, EquipAttribute::new));
 
     public record Modifier(ResourceLocation id, double value, Stage stage) {
+
         public static final Codec<Modifier> CODEC = RecordCodecBuilder.create(i -> i.group(
                 ResourceLocation.CODEC.fieldOf("id").forGetter(Modifier::id),
                 Codec.DOUBLE.fieldOf("value").forGetter(Modifier::value),
-                Stage.CODEC.fieldOf("stage").forGetter(Modifier::stage)
-        ).apply(i, Modifier::new));
+                Stage.CODEC.fieldOf("stage").forGetter(Modifier::stage)).apply(i, Modifier::new));
 
         public enum Stage implements StringRepresentable {
+
             PLUS("p"),
             MULTIPLY_BASE("mb"),
             MULTIPLY_TOTAL("mt");
@@ -42,23 +44,21 @@ public record EquipAttribute(ResourceLocation id, double minValue, double maxVal
                 return this.name;
             }
         }
-
     }
 
     public static class Manager {
-        public static final Codec<Manager> CODEC =
-                Codec.unboundedMap(ResourceLocation.CODEC, Modifier.CODEC.listOf()).xmap(Manager::new, Manager::flat);
+
+        public static final Codec<Manager> CODEC = Codec.unboundedMap(ResourceLocation.CODEC, Modifier.CODEC.listOf()).xmap(Manager::new, Manager::flat);
 
         // 原始数据结构：属性ID -> (修饰符ID -> 修饰符)
         private final Map<ResourceLocation, Map<ResourceLocation, Modifier>> attributes = new HashMap<>();
 
         // 缓存
         private boolean initialized = false;
-        private AssembleWeaponType type;//TODO 改为框架
+        private AssembleWeaponType type;// TODO 改为框架
         private Map<ResourceLocation, Double> cachedValues = new HashMap<>();
 
-        public Manager() {
-        }
+        public Manager() {}
 
         public Manager(Map<ResourceLocation, List<Modifier>> flat) {
             flat.forEach((s, modifiers) -> {
@@ -70,7 +70,7 @@ public record EquipAttribute(ResourceLocation id, double minValue, double maxVal
 
         // 添加修饰符
         public Modifier addModifier(ResourceLocation attributeId, Modifier modifier) {
-            if (initialized && containsAttribute(attributeId)) { //TODO 进行属性存在性校验
+            if (initialized && containsAttribute(attributeId)) { // TODO 进行属性存在性校验
                 Modifier m = attributes.computeIfAbsent(attributeId, k -> new HashMap<>())
                         .put(modifier.id(), modifier);
                 recalculate(attributeId); // 修改后使缓存失效
@@ -167,17 +167,17 @@ public record EquipAttribute(ResourceLocation id, double minValue, double maxVal
         }
 
         public EquipAttribute getAttribute(ResourceLocation id) {
-            //TODO
+            // TODO
             return null;
         }
 
         public List<EquipAttribute> getAttributes() {
-            //TODO
+            // TODO
             return List.of();
         }
 
-        public boolean containsAttribute(ResourceLocation location){
-            //TODO
+        public boolean containsAttribute(ResourceLocation location) {
+            // TODO
             return inited() && true;
         }
 
@@ -187,6 +187,4 @@ public record EquipAttribute(ResourceLocation id, double minValue, double maxVal
             return map;
         }
     }
-
-
 }

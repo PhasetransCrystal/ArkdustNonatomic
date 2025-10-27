@@ -5,8 +5,10 @@ package com.phasetranscrystal.nonard.util;
  */
 @FunctionalInterface
 public interface NanoInterceptor<T> {
+
     /**
      * 拦截Trait处理
+     * 
      * @param context 处理上下文
      */
     void intercept(final T context);

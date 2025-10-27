@@ -1,16 +1,17 @@
 package com.phasetranscrystal.nonard.migrate.nona_quench.perk;
 
-import com.phasetranscrystal.nonard.migrate.nona_quench.NewRegistries;
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipFrame;
-import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
-import com.phasetranscrystal.nonard.migrate.nona_quench.meta.InfluencePack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
+import com.phasetranscrystal.nonard.migrate.nona_quench.NewRegistries;
+import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipFrame;
+import com.phasetranscrystal.nonard.migrate.nona_quench.core.IEquipItem;
+import com.phasetranscrystal.nonard.migrate.nona_quench.meta.InfluencePack;
+
 public interface IEquipPerk {
 
-    default ResourceLocation getId(){
+    default ResourceLocation getId() {
         return NewRegistries.PERKS.getKey(this);
     }
 
@@ -18,15 +19,15 @@ public interface IEquipPerk {
 
     Component createExplain(boolean detailed, int factor);
 
-    default String getNameTransKey(){
-        return getId().toLanguageKey("brea.quench.perk","name");
+    default String getNameTransKey() {
+        return getId().toLanguageKey("brea.quench.perk", "name");
     }
 
-    default ResourceLocation getIconPath(){
+    default ResourceLocation getIconPath() {
         return getId().withPrefix("brea/quench/perk/");
     }
 
-    //maybe u should create a cache? 也许你应该做点缓存?
+    // maybe u should create a cache? 也许你应该做点缓存?
     InfluencePack.Child createEffect(int factor);
 
     class Default implements IEquipPerk {
@@ -46,5 +47,4 @@ public interface IEquipPerk {
             return InfluencePack.Child.EMPTY;
         }
     }
-
 }

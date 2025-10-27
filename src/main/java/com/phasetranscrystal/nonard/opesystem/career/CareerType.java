@@ -1,13 +1,14 @@
 package com.phasetranscrystal.nonard.opesystem.career;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.StringRepresentable;
+
+import com.mojang.serialization.Codec;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public enum CareerType implements StringRepresentable {
+
     VANGUARD("vanguard"),       // 先锋
     GUARD("guard"),             // 近卫
     DEFENDER("defender"),       // 重装

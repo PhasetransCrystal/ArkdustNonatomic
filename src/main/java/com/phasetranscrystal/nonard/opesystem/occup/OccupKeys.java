@@ -4,9 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class OccupKeys {
 
-
-    public static final ResourceLocation
-            CASTER = of("caster"),
+    public static final ResourceLocation CASTER = of("caster"),
             MEDIC = of("medic"),
             SNIPER = of("sniper"),
             GUARD = of("guard"),

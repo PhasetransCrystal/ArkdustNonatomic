@@ -1,0 +1,40 @@
+repositories {
+    mavenLocal()
+    maven {
+        url = "https://cursemaven.com" // CurseForge模组仓库
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        url 'https://www.jitpack.io' // GitHub模组仓库
+        content {
+            includeGroup "com.github.TechnoChronicle"
+        }
+    }
+    maven {
+        url 'https://mvn.cloud.alipay.com/nexus/content/repositories/open/'
+    }
+
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/groups/public/'
+    }
+
+    maven {
+        name 'IzzelAliz Maven'
+        url 'https://maven.izzel.io/releases/'
+    }
+
+    maven {
+        name 'Curse Maven'
+        url "https://www.cursemaven.com"
+    }
+
+    maven {
+        url 'https://www.jitpack.io'
+    }
+
+    maven {
+        url 'https://reposilite.worldseed.online/public'
+    }
+}
